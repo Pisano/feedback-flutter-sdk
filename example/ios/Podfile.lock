@@ -1,0 +1,29 @@
+PODS:
+  - feedback_flutter_sdk (0.0.1):
+    - Flutter
+    - Pisano (~> 0.0.6)
+  - Flutter (1.0.0)
+  - Pisano (0.0.6)
+
+DEPENDENCIES:
+  - feedback_flutter_sdk (from `.symlinks/plugins/feedback_flutter_sdk/ios`)
+  - Flutter (from `Flutter`)
+
+SPEC REPOS:
+  trunk:
+    - Pisano
+
+EXTERNAL SOURCES:
+  feedback_flutter_sdk:
+    :path: ".symlinks/plugins/feedback_flutter_sdk/ios"
+  Flutter:
+    :path: Flutter
+
+SPEC CHECKSUMS:
+  feedback_flutter_sdk: 73eb52cac441944d77c44690a7c32063bbb2d2f6
+  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
+  Pisano: 6e0606cee44b5c903f2fe6544c04d70758e2caf1
+
+PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+
+COCOAPODS: 1.11.2
