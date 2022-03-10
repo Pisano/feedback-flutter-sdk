@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
-String checkNotEmpty(String? value, String message) {
+String checkNotEmpty(String value, String message) {
   if (value == null || value.isEmpty == true) {
     return throw Exception(message);
   } else {
@@ -13,8 +13,8 @@ String checkNotEmpty(String? value, String message) {
 class FeedbackFlutterSdk {
   static const MethodChannel _channel = MethodChannel('feedback_flutter_sdk');
 
-  static Future<String?> get platformVersion async {
-    final String? version = await _channel.invokeMethod('getPlatformVersion');
+  static Future<String> get platformVersion async {
+    final String version = await _channel.invokeMethod('getPlatformVersion');
     return version;
   }
 
