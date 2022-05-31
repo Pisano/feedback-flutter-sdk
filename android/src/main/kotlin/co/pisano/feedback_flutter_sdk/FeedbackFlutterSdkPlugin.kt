@@ -12,6 +12,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import android.util.Log
 
 /** FeedbackFlutterSdkPlugin */
 class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
@@ -41,7 +42,7 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
                     .setEventUrl(props?.get("eventUrl") as? String)
                     .setCloseStatusCallback(object : ActionListener {
                         override fun action(action: PisanoActions) {
-
+                            Log.d("ActionStatus", "action: ${action.name}")
                         }
                     })
                     .build()
@@ -52,17 +53,12 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
                 val payload = call.argument<HashMap<String, String>>("payload")
                 val customer = call.argument<HashMap<String, Any>>("customer")
 
-                val customAttributes = java.util.HashMap<String, Any>()
-                customer?.keys?.forEach { key ->
-                    customAttributes[key] = customer?.get(key) as Any
-                }
-
                 val customerModel = PisanoCustomer(
                     name = customer?.get("name") as? String,
                     externalId = customer?.get("externalId") as? String,
                     email = customer?.get("email") as? String,
                     phoneNumber = customer?.get("phoneNumber") as? String,
-                    customAttributes = customAttributes
+                    customAttributes = customer?.get("customAttrs") as? java.util.HashMap<String, Any>
                 )
 
                 PisanoSDK.show(

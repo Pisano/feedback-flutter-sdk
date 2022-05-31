@@ -54,21 +54,11 @@ class _MyAppState extends State<MyApp> {
       "externalId": "",
       "email": "",
       "phoneNumber": "",
+      "customAttrs": {
+        "your_key_one": "your value 1",
+        "your_key_two": "your value 2"
+      }
     });
-
-    /*
-    FeedbackFlutterSdk.track({
-      "event": ""
-    }, {
-      "name": ""
-    }, {
-      "name": "",
-      "externalId": "",
-      "email": "",
-      "phoneNumber": "",
-    });
-
-     */
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
