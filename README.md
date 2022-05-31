@@ -65,6 +65,10 @@ import 'package:feedback_flutter_sdk/feedback_flutter_sdk.dart';
       "externalId": "",
       "email": "",
       "phoneNumber": "",
+      "customAttrs": {
+          "your_key_one": "your value 1",
+          "your_key_two": "your value 2"
+      }
     });
 ```
 
@@ -93,7 +97,7 @@ import 'package:feedback_flutter_sdk/feedback_flutter_sdk.dart';
 | phoneNumber | String | The phone number of the customer |
 | name | String | The name of the customer |
 | externalId | String | lThe external ID of the customer |
-| your_custom_key | Any | your custom key and value |
+| customAttrs | Dictionary | your custom keys and values |
 
 ### Track:
 
