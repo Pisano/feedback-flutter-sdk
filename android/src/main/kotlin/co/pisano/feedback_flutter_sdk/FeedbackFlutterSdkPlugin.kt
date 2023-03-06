@@ -13,6 +13,8 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import android.util.Log
+import co.pisano.feedback.data.helper.ViewMode
+import co.pisano.feedback.data.model.Title
 
 /** FeedbackFlutterSdkPlugin */
 class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
@@ -22,6 +24,7 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
     /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
+    private var actionCallback: ((PisanoActions) -> Unit)? = null
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "feedback_flutter_sdk")
@@ -33,25 +36,30 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
         when (call.method) {
             "getPlatformVersion" -> result.success("Android ${android.os.Build.VERSION.RELEASE}")
             "init" -> {
-                val props = call.argument<HashMap<String, Any>>("props")
                 val manager = PisanoSDKManager.Builder(context)
-                    .setApplicationId(props?.get("applicationId") as? String)
-                    .setAccessKey(props?.get("accessKey") as? String)
-                    .setApiUrl(props?.get("apiUrl") as? String)
-                    .setFeedbackUrl(props?.get("feedbackUrl") as? String)
-                    .setEventUrl(props?.get("eventUrl") as? String)
+                    .setApplicationId(call.argument<String>("applicationId"))
+                    .setAccessKey(call.argument<String>("accessKey"))
+                    .setApiUrl(call.argument<String>("apiUrl"))
+                    .setFeedbackUrl(call.argument<String>("feedbackUrl"))
+                    .setEventUrl(call.argument<String?>("eventUrl"))
                     .setCloseStatusCallback(object : ActionListener {
                         override fun action(action: PisanoActions) {
-                            Log.d("ActionStatus", "action: ${action.name}")
+                            actionCallback?.invoke(action)
                         }
                     })
                     .build()
                 PisanoSDK.init(manager)
             }
             "show" -> {
-                val props = call.argument<HashMap<String, Any>>("props")
+                val viewMode: ViewMode = ViewMode.parse(call.argument<Int>("viewMode") ?: 0) ?: ViewMode.DEFAULT
+                var title: Title? = null
                 val payload = call.argument<HashMap<String, String>>("payload")
                 val customer = call.argument<HashMap<String, Any>>("customer")
+
+                val titleArg = call.argument<String?>("title")
+                if (!titleArg.isNullOrBlank()) {
+                    title = Title(text = titleArg, textSize = call.argument<Int?>("titleFontSize")?.toFloat())
+                }
 
                 val customerModel = PisanoCustomer(
                     name = customer?.get("name") as? String,
@@ -62,11 +70,19 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
                 )
 
                 PisanoSDK.show(
-                    flowId = props?.get("flowId") as? String,
-                    language = props?.get("language") as? String,
+                    viewMode = viewMode,
+                    title = title,
+                    flowId = call.argument<String?>("flowId"),
+                    language = call.argument<String?>("language"),
                     payload = payload,
                     pisanoCustomer = customerModel
                 )
+
+                actionCallback = {
+                    if (it != PisanoActions.OPENED) {
+                        result.success(it.ordinal + 1)
+                    }
+                }
             }
             "track" -> {
                 val props = call.argument<HashMap<String, Any>>("props")
@@ -91,6 +107,15 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
                     payload = payload,
                     pisanoCustomer = customerModel
                 )
+
+                actionCallback = {
+                    if (it != PisanoActions.OPENED) {
+                        result.success(it.ordinal + 1)
+                    }
+                }
+            }
+            "clear" -> {
+                PisanoSDK.clearAction()
             }
             else -> result.notImplemented()
         }

@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:feedback_flutter_sdk/feedback_flutter_sdk.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +16,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
+  FeedbackFlutterSdk feedbackSdk = FeedbackFlutterSdk();
 
   @override
   void initState() {
@@ -25,49 +25,35 @@ class _MyAppState extends State<MyApp> {
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-    try {
-      platformVersion = await FeedbackFlutterSdk.platformVersion ??
-          'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    FeedbackFlutterSdk.init(props: {
-      "applicationId": "",
-      "accessKey": "",
-      "apiUrl": "",
-      "feedbackUrl": "",
-      "eventUrl": "",
-    });
-
-    FeedbackFlutterSdk.show({
-      "flowId": "",
-      "language": ""
-    }, {
-      "name": ""
-    }, {
-      "name": "",
-      "externalId": "",
-      "email": "",
-      "phoneNumber": "",
-      "customAttrs": {
-        "your_key_one": "your value 1",
-        "your_key_two": "your value 2"
-      }
-    });
+  void initPlatformState() {
+    feedbackSdk.init("appId", "accessKey", "apiUrl", "feedbackUrl", null);
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.
     if (!mounted) return;
+  }
 
-    setState(() {
-      _platformVersion = platformVersion;
-    });
+  Future<void> _onShowButtonPressed() async {
+    var callback = await feedbackSdk.show(
+        viewMode: ViewMode.bottomSheetMode,
+        title: "Flutter Title Test",
+        titleFontSize: 20,
+        flowId: "",
+        language: "language",
+        customer: {},
+        payload: {});
+    log(callback.name);
+  }
+
+  Future<void> _onTrackButtonPressed() async {
+    var callback = await feedbackSdk.track("view_promo",
+        customer: {}, payload: {}, language: "language");
+    log(callback.name);
+  }
+
+  void _onClearButtonPressed() {
+    feedbackSdk.clear();
   }
 
   @override
@@ -78,7 +64,29 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const SizedBox(
+                  height: 20), // Add some vertical spacing between the buttons
+              ElevatedButton(
+                onPressed: _onShowButtonPressed,
+                child: const Text('Show'),
+              ),
+              const SizedBox(
+                  height: 20), // Add some vertical spacing between the buttons
+              ElevatedButton(
+                onPressed: _onTrackButtonPressed,
+                child: const Text('Track'),
+              ),
+              const SizedBox(
+                  height: 20), // Add some vertical spacing between the buttons
+              ElevatedButton(
+                onPressed: _onClearButtonPressed,
+                child: const Text('Clear'),
+              ),
+            ],
+          ),
         ),
       ),
     );

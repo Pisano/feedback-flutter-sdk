@@ -10,56 +10,52 @@ public class SwiftFeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        result("iOS " + UIDevice.current.systemVersion)
-        
         if(call.method == "init") {
+            print("Init is called")
+            Pisano.debugMode(true)
             guard let args = call.arguments else {
                 return result("Could not recognize flutter arguments in method: (init)")
             }
-            if let myArgs = args as? [String: Any]   {
-                if let props = myArgs["props"] as? Dictionary<String,Any> {
-                    
-                    Pisano.boot(appId:props["applicationId"] as? String ?? "",
-                                accessKey:props["accessKey"] as? String ?? "",
-                                apiUrl:props["apiUrl"] as? String ?? "",
-                                feedbackUrl:props["feedbackUrl"] as? String ?? "")
-                }
+            if let args = args as? [String: Any]   {
+                    Pisano.boot(appId:args["applicationId"] as? String ?? "",
+                                accessKey:args["accessKey"] as? String ?? "",
+                                apiUrl:args["apiUrl"] as? String ?? "",
+                                feedbackUrl:args["feedbackUrl"] as? String ?? "",
+                                eventUrl:args["eventUrl"] as? String)
             }
             
-        }else if(call.method == "show") {
+        } else if(call.method == "show") {
             guard let args = call.arguments else {
                 return result("Could not recognize flutter arguments in method: (show)")
             }
-            if let myArgs = args as? [String: Any]   {
-                if let props = myArgs["props"] as? Dictionary<String,Any> {
-                    if let customer = myArgs["customer"] as? Dictionary<String,Any> {
-                        if let payload = myArgs["payload"] as? Dictionary<String,String> {
-                            
-                            Pisano.show(flowId: props["flowId"] as? String ?? "",
-                                        language: props["language"] as? String ?? "",
-                                        customer: customer,
-                                        payload: payload)
-                        }
-                        
+            if let args = args as? [String: Any]   {
+                var customTitle: NSAttributedString? = nil
+                if let title = args["title"] as? String {
+                    var attributes: [NSAttributedString.Key: Any] = [.font: UIFont.preferredFont(forTextStyle: .body)]
+                    if let titleFontSize = args["titleFontSize"] as? Int {
+                        attributes[.font] = UIFont.systemFont(ofSize: CGFloat(titleFontSize))
                     }
-                    
+                    customTitle = NSAttributedString(string: title, attributes: attributes)
+                }
+                
+                let viewMode = ViewMode(rawValue: args["viewMode"] as? Int ?? 0) ?? .default
+                Pisano.show(mode: viewMode, title: customTitle, flowId: args["flowId"] as? String, language: args["language"] as? String, customer: args["customer"] as? [String : Any], payload: args["payload"] as? [String : String]) { callback in
+                    result(callback.rawValue)
                 }
             }
-        }else if(call.method == "track") {
+            
+        } else if(call.method == "track") {
             guard let args = call.arguments else {
                 return result("Could not recognize flutter arguments in method: (track)")
             }
-            if let myArgs = args as? [String: Any]   {
-                if let props = myArgs["props"] as? Dictionary<String,Any> {
-                    if let customer = myArgs["customer"] as? Dictionary<String,Any> {
-                        if let payload = myArgs["payload"] as? Dictionary<String,String> {
-                            
-                            Pisano.track(event: props["event"] as? String ?? "", payload: payload, customer: customer)
-                        }
-                        
-                    }
+            if let args = args as? [String: Any]   {
+                Pisano.track(event: args["event"] as? String ?? "", payload: args["payload"] as? [String: String], customer: args["customer"] as? [String: Any], language: args["language"] as? String) { callback in
+                    result(callback.rawValue)
                 }
             }
+            
+        } else if (call.method == "clear") {
+            Pisano.clear()
         }
     }
 }

@@ -16,7 +16,7 @@ Feedback flutter sdk.
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.dependency 'Pisano','~> 0.0.8'
+  s.dependency 'Pisano','~> 0.2.0'
   s.platform = :ios, '9.0'
   s.static_framework = true
   # Flutter.framework does not contain a i386 slice.
