@@ -24,9 +24,15 @@ class _MyAppState extends State<MyApp> {
     initPlatformState();
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
+  // Platform messages are asynchronous, so we normalize in an async method.
   void initPlatformState() {
-    feedbackSdk.init("appId", "accessKey", "apiUrl", "feedbackUrl", null);
+    feedbackSdk.init(
+      "WTD8PpJrc4oML4LSIJjA01D_ZhnXUHJHblvc9THQ04E",
+      "B6g_1k4b-KPWFFDsk67AHZfRPuPcVzCVRQjGn5vnR6ERvc7jQMgMzaD9LfgNSEezwy4",
+      "https://api.stage.psn.cx",
+      "https://web.stage.psn.cx/web_feedback",
+      null
+    );
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
