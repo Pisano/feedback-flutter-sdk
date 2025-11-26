@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'feedback_flutter_sdk'
-  s.version          = '0.0.14'
+  s.version          = '0.0.15'
   s.summary          = 'Feedback flutter sdk.'
   s.description      = <<-DESC
 Feedback flutter sdk.
@@ -16,7 +16,7 @@ Feedback flutter sdk.
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.dependency 'Pisano','~> 1.0.10'
+  s.dependency 'Pisano','~> 1.0.16'
   s.platform = :ios, '9.0'
   s.static_framework = true
   # Flutter.framework does not contain a i386 slice.

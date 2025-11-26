@@ -1,6 +1,6 @@
 import Flutter
 import UIKit
-import Feedback
+import PisanoFeedback
 
 public class SwiftFeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -11,12 +11,12 @@ public class SwiftFeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if(call.method == "init") {
-            print("Init is called")
-            Pisano.debugMode(true)
             guard let args = call.arguments else {
                 return result("Could not recognize flutter arguments in method: (init)")
             }
             if let args = args as? [String: Any]   {
+                    let debugLogging = args["debugLogging"] as? Bool ?? false
+                    Pisano.debugMode(debugLogging)
                     Pisano.boot(appId:args["applicationId"] as? String ?? "",
                                 accessKey:args["accessKey"] as? String ?? "",
                                 apiUrl:args["apiUrl"] as? String ?? "",

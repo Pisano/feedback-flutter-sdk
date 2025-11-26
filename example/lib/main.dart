@@ -25,13 +25,14 @@ class _MyAppState extends State<MyApp> {
   }
 
   // Platform messages are asynchronous, so we normalize in an async method.
-  void initPlatformState() {
-    feedbackSdk.init(
+  Future<void> initPlatformState() async {
+    await feedbackSdk.init(
       "applicationId",
       "accessKey",
       "apiUrl",
       "feedbackUrl",
-      null
+      null,
+      debugLogging: false,
     );
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -49,13 +50,13 @@ class _MyAppState extends State<MyApp> {
         language: "language",
         customer: {},
         payload: {});
-    log(callback.name);
+    log(callback.toString());
   }
 
   Future<void> _onTrackButtonPressed() async {
     var callback = await feedbackSdk.track("view_promo",
         customer: {}, payload: {}, language: "language");
-    log(callback.name);
+    log(callback.toString());
   }
 
   void _onClearButtonPressed() {

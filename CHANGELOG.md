@@ -1,3 +1,12 @@
+## 0.0.15
+
+* Support Dart SDK >=2.12.0 and enable Dart 3/Flutter 3 apps (upper bound <4.0.0)
+* Fix Android track bridge so events reach Pisano backend reliably
+* Deliver OPENED callbacks to Flutter and expose debug logging toggle
+* Stop forcing Pisano iOS SDK debug mode; honor new `debugLogging` flag
+* Align customer payload handling between show/track and awaitable init/clear
+* Update iOS Pisano SDK dependency to `~> 1.0.16`
+
 ## 0.0.14
 
 * Fixed Android release build resource linking errors

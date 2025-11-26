@@ -1,0 +1,31 @@
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.melos_tool
+
+# Build artifacts
+build/
+**/build/
+
+# IDE/project files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Android
+android/.gradle/
+android/local.properties
+example/android/.gradle/
+example/android/local.properties
+
+# iOS / CocoaPods
+ios/Pods/
+example/ios/Pods/
+example/ios/Flutter/ephemeral/
+
+# Generated plugin registrant cache
+example/ios/Flutter/Generated.xcconfig
+example/ios/Flutter/flutter_export_environment.sh
+
