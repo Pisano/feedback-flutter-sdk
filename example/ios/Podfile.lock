@@ -1,5 +1,5 @@
 PODS:
-  - feedback_flutter_sdk (0.0.15):
+  - feedback_flutter_sdk (0.0.16):
     - Flutter
     - Pisano (~> 1.0.16)
   - Flutter (1.0.0)
@@ -20,10 +20,10 @@ EXTERNAL SOURCES:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  feedback_flutter_sdk: 2b0fe3774bd2519123208f34ba998d1a30c2454f
+  feedback_flutter_sdk: 0a6e1a3d9c8c91969682f78efeb2074f0a83047c
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   Pisano: 0d785579e71c56540e936a8156308c066f36534e
 
-PODFILE CHECKSUM: 0dbd5a87e0ace00c9610d2037ac22083a01f861d
+PODFILE CHECKSUM: c4c93c5f6502fe2754f48404d3594bf779584011
 
 COCOAPODS: 1.16.2

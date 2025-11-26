@@ -1,3 +1,9 @@
+## 0.0.16
+
+* No runtime/API changes compared to 0.0.15.
+* Clean up tracked tool artifacts so `flutter pub publish` succeeds.
+* Add homepage and minimum Flutter SDK constraint to `pubspec.yaml`.
+
 ## 0.0.15
 
 * Support Dart SDK >=2.12.0 and enable Dart 3/Flutter 3 apps (upper bound <4.0.0)
