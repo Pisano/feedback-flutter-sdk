@@ -1,10 +1,11 @@
 name: feedback_flutter_sdk
 description: Feedback flutter sdk.
 version: 0.0.15
-homepage:
+homepage: https://github.com/Pisano/feedback-flutter-sdk
 
 environment:
   sdk: ">=2.12.0 <4.0.0"
+  flutter: ">=1.10.0"
 
 dependencies:
   flutter:
