@@ -37,6 +37,7 @@ import 'package:feedback_flutter_sdk/feedback_flutter_sdk.dart';
       "apiUrl": "",
       "feedbackUrl": "",
       "eventUrl": "",
+      debugLogging: false,
     );
 ```
 | Parameter Name | Type  | Description  |
@@ -46,6 +47,7 @@ import 'package:feedback_flutter_sdk/feedback_flutter_sdk.dart';
 | apiUrl | String | The URL of API that will be accessed |
 | feedbackUrl | String | Base URL for survey |
 | eventUrl | String | Event Url for track |
+| debugLogging | bool | Enables verbose native SDK logs (defaults to false) |
 
 ### Show:
 

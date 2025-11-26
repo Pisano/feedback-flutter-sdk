@@ -28,8 +28,13 @@ class FeedbackFlutterSdk {
   static const MethodChannel _channel = MethodChannel('feedback_flutter_sdk');
 
   ///
-  void init(String applicationId, String accessKey, String apiUrl,
-      String feedbackUrl, String? eventUrl) async {
+  Future<void> init(
+      String applicationId,
+      String accessKey,
+      String apiUrl,
+      String feedbackUrl,
+      String? eventUrl,
+      {bool debugLogging = false}) async {
     checkNotEmpty(applicationId, "application id cannot be empty");
     checkNotEmpty(accessKey, "access key cannot be empty");
     checkNotEmpty(apiUrl, "api url cannot be empty");
@@ -40,7 +45,8 @@ class FeedbackFlutterSdk {
       "accessKey": accessKey,
       "apiUrl": apiUrl,
       "feedbackUrl": feedbackUrl,
-      "eventUrl": eventUrl
+      "eventUrl": eventUrl,
+      "debugLogging": debugLogging
     });
   }
 
@@ -69,9 +75,9 @@ class FeedbackFlutterSdk {
   ///
   Future<FeedbackCallback> track(String event,
       {String? language, customer, payload}) async {
-    checkNotEmpty(event, "event cannot be empty");
+    final normalizedEvent = checkNotEmpty(event, "event cannot be empty");
     dynamic result = await _channel.invokeMethod('track', {
-      "event": event,
+      "event": normalizedEvent,
       "language": language,
       "customer": customer,
       "payload": payload
@@ -80,7 +86,7 @@ class FeedbackFlutterSdk {
     return _callback(result);
   }
 
-  void clear() async {
+  Future<void> clear() async {
     await _channel.invokeMethod("clear");
   }
 

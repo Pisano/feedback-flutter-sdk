@@ -5,10 +5,11 @@ import 'package:feedback_flutter_sdk/feedback_flutter_sdk.dart';
 void main() {
   const MethodChannel channel = MethodChannel('feedback_flutter_sdk');
 
-  TestWidgetsFlutterBinding.ensureInitialized();
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    channel.setMockMethodCallHandler((MethodCall methodCall) async {
+    binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
       if (methodCall.method == 'getPlatformVersion') {
         return '42';
       } else if (methodCall.method == 'init') {
@@ -25,18 +26,18 @@ void main() {
   });
 
   tearDown(() {
-    channel.setMockMethodCallHandler(null);
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
   });
 
-  test('init method test', () {
+  test('init method test', () async {
     final sdk = FeedbackFlutterSdk();
     try {
-      sdk.init(
+      await sdk.init(
         "applicationId",
-      "accessKey",
-      "apiUrl",
-      "feedbackUrl",
-        null
+        "accessKey",
+        "apiUrl",
+        "feedbackUrl",
+        null,
       );
       // If no exception thrown, test passes
       expect(true, isTrue);
@@ -49,12 +50,12 @@ void main() {
   test('show method test', () async {
     final sdk = FeedbackFlutterSdk();
     try {
-      sdk.init(
+      await sdk.init(
         "applicationId",
         "accessKey",
         "apiUrl",
         "feedbackUrl",
-        null
+        null,
       );
       final result = await sdk.show();
       expect(result, FeedbackCallback.closed);
@@ -67,12 +68,12 @@ void main() {
   test('track method test', () async {
     final sdk = FeedbackFlutterSdk();
     try {
-      sdk.init(
+      await sdk.init(
         "applicationId",
         "accessKey",
         "apiUrl",
         "feedbackUrl",
-        null
+        null,
       );
       final result = await sdk.track('test_event');
       expect(result, FeedbackCallback.closed);

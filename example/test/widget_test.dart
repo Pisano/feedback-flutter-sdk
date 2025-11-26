@@ -5,23 +5,19 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:feedback_flutter_sdk_example/main.dart';
 
 void main() {
-  testWidgets('Verify Platform version', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('Displays example CTAs', (WidgetTester tester) async {
+    // Build the example app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 
-    // Verify that platform version is retrieved.
-    expect(
-      find.byWidgetPredicate(
-        (Widget widget) => widget is Text &&
-                           widget.data!.startsWith('Running on:'),
-      ),
-      findsOneWidget,
-    );
+    // Verify the default app bar title and the three action buttons.
+    expect(find.text('Plugin example app'), findsOneWidget);
+    expect(find.text('Show'), findsOneWidget);
+    expect(find.text('Track'), findsOneWidget);
+    expect(find.text('Clear'), findsOneWidget);
   });
 }

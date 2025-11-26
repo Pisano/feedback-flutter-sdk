@@ -71,13 +71,7 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
                         null
                     }
 
-                    val customerModel = PisanoCustomer(
-                        name = customer?.get("name") as? String,
-                        externalId = customer?.get("externalId") as? String,
-                        email = customer?.get("email") as? String,
-                        phoneNumber = customer?.get("phoneNumber") as? String,
-                        customAttributes = customer?.get("customAttrs") as? HashMap<String, Any>
-                    )
+                    val customerModel = buildPisanoCustomer(customer)
 
                     PisanoSDK.show(
                         viewMode = viewMode,
@@ -101,22 +95,18 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
                     val props = call.argument<HashMap<String, Any>>("props")
                     val payload = call.argument<HashMap<String, String>>("payload")
                     val customer = call.argument<HashMap<String, Any>>("customer")
+                    val explicitEvent = call.argument<String>("event")
 
-                    val customAttributes = HashMap<String, Any>()
-                    customer?.keys?.forEach { key ->
-                        customAttributes[key] = customer[key] as Any
+                    val eventName = explicitEvent ?: (props?.get("event") as? String)
+                    if (eventName.isNullOrBlank()) {
+                        result.error("INVALID_ARGUMENT", "event cannot be empty", null)
+                        return
                     }
 
-                    val customerModel = PisanoCustomer(
-                        name = customer?.get("name") as? String,
-                        externalId = customer?.get("externalId") as? String,
-                        email = customer?.get("email") as? String,
-                        phoneNumber = customer?.get("phoneNumber") as? String,
-                        customAttributes = customAttributes
-                    )
+                    val customerModel = buildPisanoCustomer(customer)
 
                     PisanoSDK.track(
-                        event = (props?.get("event") as? String) ?: "",
+                        event = eventName,
                         payload = payload,
                         pisanoCustomer = customerModel
                     )
@@ -148,5 +138,17 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+    }
+
+    private fun buildPisanoCustomer(customer: HashMap<String, Any>?): PisanoCustomer {
+        val customAttributes = customer?.get("customAttrs") as? HashMap<String, Any>
+
+        return PisanoCustomer(
+            name = customer?.get("name") as? String,
+            externalId = customer?.get("externalId") as? String,
+            email = customer?.get("email") as? String,
+            phoneNumber = customer?.get("phoneNumber") as? String,
+            customAttributes = customAttributes
+        )
     }
 }
