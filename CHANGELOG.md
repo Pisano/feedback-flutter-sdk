@@ -6,6 +6,7 @@
 * Stop forcing Pisano iOS SDK debug mode; honor new `debugLogging` flag
 * Align customer payload handling between show/track and awaitable init/clear
 * Update iOS Pisano SDK dependency to `~> 1.0.16`
+* Please run `pod repo update && pod install` (or `pod update Pisano`) after upgrading so the new iOS pod version is fetched; otherwise Xcode may still look for the legacy `Feedback` module.
 
 ## 0.0.14
 
