@@ -1,150 +1,219 @@
+# Pisano Feedback Flutter SDK
 
-# Pisano Feedback SDK
+Flutter plugin that bridges Pisano native SDKs on **Android** and **iOS**.
 
-Pisano feedback sdk is the customer experience management platform.
+If you’re looking for the native iOS sample apps, see the Pisano iOS sample repo and its guide: [Pisano iOS sample apps README](https://github.com/Pisano/feedback-sample-ios-app/blob/main/README.md).
 
-## Description
+## ✨ Features
 
-Feedback Flutter Plugin for customer experience management on Android and iOS.
+- **Widget UI**: Feedback widget is rendered via web content through the native SDKs
+- **One Flutter API**: Same Dart calls for Android + iOS (`init`, `show`, `track`, `clear`)
+- **View modes**: Full screen and bottom sheet
+- **Customer + payload**: Pass customer attributes and transactional payload
+- **Multi-language**: Provide `language`
+- **Custom title**: Provide `title` + `titleFontSize`
 
-## Installation
+## 📱 Requirements
 
-In the `dependencies:` section of your `pubspec.yaml`, add the following line:
+- **Flutter**: tested with Flutter `3.38.3` (Dart `3.10.1`)
+- **iOS development**: Xcode 15+ and CocoaPods `>= 1.13`
+- **Android development**: Android SDK 34+ and Java 17
+
+Native SDK versions are an internal implementation detail for most consumers.
+If you are contributing to the plugin or debugging native builds, see `DEVELOPMENT.md`.
+
+## 📦 Installation
+
+### Option A) Git dependency (most common for private distribution)
+
+In your app’s `pubspec.yaml`:
 
 ```yaml
 dependencies:
   feedback_flutter_sdk:
     git:
       url: https://github.com/Pisano/feedback-flutter-sdk.git
-      ref: <latest_version>
+      ref: <tag_or_commit>
 ```
 
-## Usage
-For a comprehensive understanding of how to use this, refer to the example provided.
+### Option B) Local path (during development)
 
-### Import package:
+```yaml
+dependencies:
+  feedback_flutter_sdk:
+    path: ../feedback-flutter-sdk
+```
 
-``` dart
+Then run:
+
+```bash
+flutter pub get
+```
+
+## 🚀 Quick Start (Flutter)
+
+### 1) Import
+
+```dart
 import 'package:feedback_flutter_sdk/feedback_flutter_sdk.dart';
 ```
 
-### Initialize:
+### 2) Initialize (Boot)
 
-``` dart
-    FeedbackFlutterSdk.init(
-      "applicationId": "",
-      "accessKey": "",
-      "apiUrl": "",
-      "feedbackUrl": "",
-      "eventUrl": "",
-      debugLogging: false,
-    );
-```
-| Parameter Name | Type  | Description  |
-| ------- | --- | --- |
-| applicationId | String | The application ID that can be obtained from Pisano Dashboard |
-| accessKey | String | The access key can be obtained from Pisano Dashboard |
-| apiUrl | String | The URL of API that will be accessed |
-| feedbackUrl | String | Base URL for survey |
-| eventUrl | String | Event Url for track |
-| debugLogging | bool | Enables verbose native SDK logs (defaults to false) |
+Call once at app startup (or before the first `show()`):
 
-### Show:
+```dart
+final feedbackSdk = FeedbackFlutterSdk();
 
-``` dart
-    FeedbackFlutterSdk.show(
-      viewMode: ViewMode,
-      title: "",
-      titleFontSize: 20,
-      flowId: "",
-      language: "",
-      customer: {
-        "name": "",
-        "externalId": "",
-        "email": "",
-        "phoneNumber": "",
-        "customAttrs": {
-            "your_key_one": "your value 1",
-            "your_key_two": "your value 2"
-        }
-      },
-      payload: {
-          "your_key_one": "your value 1",
-      });
+await feedbackSdk.init(
+  '<applicationId>',
+  '<accessKey>',
+  '<apiUrl>',
+  '<feedbackUrl>',
+  null, // eventUrl (optional)
+  debugLogging: false,
+);
 ```
 
-| Parameter Name | Type  | Description  |
-| ------- | --- | --- |
-| viewMode | ViewMode | View Mode of Flow Screen, Default or Bottom Sheet |
-| title | String | Custom Title of Flow Screen |
-| titleFontSize | String | Custom Title Font Size |
-| flowId | String | The ID of related flow. Can be obtained from Pisano Dashboard. Can be sent as empty string "" for default flow |
-| language | String | language code |
-| payload | HashMap<String, String> | Question and related answer in an array (mostly uses for pre-loaded responses to take transactional data(s)) |
-| customer | HashMap<String, Any> | Please check the table below for the details of this dictionary |
+### 3) Show widget
 
-#### customer keys
-| Key Name | Type  | Description  |
-| ------- | --- | --- |
-| email | String | The email of the customer |
-| phoneNumber | String | The phone number of the customer |
-| name | String | The name of the customer |
-| externalId | String | lThe external ID of the customer |
-| customAttrs | Dictionary | your custom keys and values |
+```dart
+final callback = await feedbackSdk.show(
+  viewMode: ViewMode.bottomSheetMode,
+  title: 'We Value Your Feedback',
+  titleFontSize: 20,
+  flowId: '', // empty => default flow
+  language: 'tr',
+  customer: {
+    'name': 'John Doe',
+    'externalId': 'CRM-12345',
+    'email': 'john@example.com',
+    'phoneNumber': '+905001112233',
+    'customAttrs': {'plan': 'premium'},
+  },
+  payload: {'source': 'app', 'screen': 'home'},
+);
 
-#### payload keys
-| Key Name | Type  | Description  |
-| ------- | --- | --- |
-| your_custom_key | Any | your custom key and value |
-
-### Track:
-
-``` dart
-    FeedbackFlutterSdk.track(
-      "event",
-      customer: {
-        "name": "",
-        "externalId": "",
-        "email": "",
-        "phoneNumber": "",
-        "customAttrs": {
-            "your_key_one": "your value 1",
-            "your_key_two": "your value 2"
-        }
-      },
-      payload: {
-          "your_key_one": "your value 1",
-      });
+print('show callback: $callback');
 ```
 
-| Parameter Name | Type  | Description  |
-| ------- | --- | --- |
-| event | String | event name |
-| payload | HashMap<String, String> | Question and related answer in an array (mostly uses for pre-loaded responses to take transactional data(s)) |
-| customer | HashMap<String, Any> | Please check the table below for the details of this dictionary |
+### 4) Track event
 
-#### customer keys
-| Key Name | Type  | Description  |
-| ------- | --- | --- |
-| email | String | The email of the customer |
-| phoneNumber | String | The phone number of the customer |
-| name | String | The name of the customer |
-| externalId | String | lThe external ID of the customer |
-| your_custom_key | Any | your custom key and value |
+```dart
+final callback = await feedbackSdk.track(
+  'view_promo',
+  language: 'tr',
+  customer: {'externalId': 'CRM-12345'},
+  payload: {'campaign': 'winter'},
+);
 
-#### payload keys
-| Key Name | Type  | Description  |
-| ------- | --- | --- |
-| your_custom_key | Any | your custom key and value |
+print('track callback: $callback');
+```
 
-## Screenshots
+### 5) Clear
+
+```dart
+await feedbackSdk.clear();
+```
+
+## 📚 API Reference
+
+### `FeedbackFlutterSdk`
+
+- **`Future<void> init(applicationId, accessKey, apiUrl, feedbackUrl, eventUrl, {debugLogging})`**
+  - Must be called before `show` / `track`
+- **`Future<FeedbackCallback> show({viewMode, title, titleFontSize, flowId, language, customer, payload})`**
+- **`Future<FeedbackCallback> track(event, {language, customer, payload})`**
+- **`Future<void> clear()`**
+
+### `ViewMode`
+
+- **`ViewMode.defaultMode`**: full screen
+- **`ViewMode.bottomSheetMode`**: bottom sheet (note: some iOS bottom sheet behaviors require iOS 13+)
+
+### `FeedbackCallback`
+
+Returned from `show()` and `track()`:
+
+- `closed`, `sendFeedback`, `outside`, `opened`, `displayOnce`, `preventMultipleFeedback`, `channelQuotaExceeded`, `none`
+
+## ▶️ Run the Example App
+
+The `example/` app uses the plugin through a path dependency and shows a UI similar to Pisano’s native sample flows.
+
+### 1) Install dependencies
+
+```bash
+flutter pub get
+(cd example && flutter pub get)
+```
+
+### 2) Provide credentials (local-only)
+
+See `example/README.md` for the recommended approach (local `pisano_defines.json` ignored by git).
+
+### 3) Run
+
+```bash
+cd example
+flutter run -d <device_id>
+```
+
+## ⚙️ Platform Configuration Notes
+
+### iOS permissions (only if your flows use attachments)
+
+Add to your app’s `Info.plist`:
+
+- `NSCameraUsageDescription`
+- `NSPhotoLibraryUsageDescription`
+- `NSPhotoLibraryAddUsageDescription`
+
+These are the same requirements described in the iOS native sample guide: [Pisano iOS sample apps README](https://github.com/Pisano/feedback-sample-ios-app/blob/main/README.md).
+
+### Android permissions
+
+This plugin’s Android manifest includes network permissions (e.g. `INTERNET`). If your flow uses additional device features, ensure your app requests the corresponding permissions.
+
+## ❓ Troubleshooting
+
+### “SDK not initialized / boot not happening”
+
+- Ensure you call `await feedbackSdk.init(...)` before `show()` or `track()`
+- Ensure credentials/URLs are not empty
+- In the `example/` app: provide credentials as described in `example/README.md`
+
+### iOS build issues
+
+- Run once inside `example/ios`:
+
+```bash
+cd example/ios
+pod install
+```
+
+### Android dependency resolution issues
+
+- Ensure Gradle can reach `mavenCentral()` and the Android SDK is installed
+
+## ✅ Smoke Tests / Checks
+
+From repo root:
+
+```bash
+flutter analyze
+flutter test
+(cd example && flutter analyze)
+```
+
+## 📷 Screenshots
 
 iOS              |  Android 
 :-------------------------:|:-------------------------:
-![alt-text-1](https://github.com/Pisano/feedback-flutter-sdk/blob/main/screenshots/screenshot_ios.png)  |  ![alt-text-2](https://github.com/Pisano/feedback-flutter-sdk/blob/main/screenshots/screenshot_android.png)
+![iOS screenshot](https://github.com/Pisano/feedback-flutter-sdk/blob/main/screenshots/screenshot_ios.png)  |  ![Android screenshot](https://github.com/Pisano/feedback-flutter-sdk/blob/main/screenshots/screenshot_android.png)
 
 ## Licence
 
-Copyright Pisano 2022.
+Copyright Pisano.
 
-Pisano Feedback SDK is released under the MIT license. See [LICENSE](https://github.com/Pisano/feedback-flutter-sdk/blob/main/LICENSE)  for more information.
+Released under the MIT license. See [LICENSE](https://github.com/Pisano/feedback-flutter-sdk/blob/main/LICENSE).

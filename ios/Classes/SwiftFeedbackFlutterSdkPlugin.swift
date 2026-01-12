@@ -10,52 +10,75 @@ public class SwiftFeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        if(call.method == "init") {
-            guard let args = call.arguments else {
-                return result("Could not recognize flutter arguments in method: (init)")
+        switch call.method {
+        case "init":
+            guard let args = call.arguments as? [String: Any] else {
+                result(FlutterError(code: "INVALID_ARGUMENTS",
+                                    message: "Expected a map for method: init",
+                                    details: nil))
+                return
             }
-            if let args = args as? [String: Any]   {
-                    let debugLogging = args["debugLogging"] as? Bool ?? false
-                    Pisano.debugMode(debugLogging)
-                    Pisano.boot(appId:args["applicationId"] as? String ?? "",
-                                accessKey:args["accessKey"] as? String ?? "",
-                                apiUrl:args["apiUrl"] as? String ?? "",
-                                feedbackUrl:args["feedbackUrl"] as? String ?? "",
-                                eventUrl:args["eventUrl"] as? String)
+
+            let debugLogging = args["debugLogging"] as? Bool ?? false
+            Pisano.debugMode(debugLogging)
+            Pisano.boot(appId: args["applicationId"] as? String ?? "",
+                        accessKey: args["accessKey"] as? String ?? "",
+                        apiUrl: args["apiUrl"] as? String ?? "",
+                        feedbackUrl: args["feedbackUrl"] as? String ?? "",
+                        eventUrl: args["eventUrl"] as? String)
+
+            // Important: always return a result to Flutter. Otherwise `await init()`
+            // will hang and the app will think the SDK is not initialized.
+            result(nil)
+
+        case "show":
+            guard let args = call.arguments as? [String: Any] else {
+                result(FlutterError(code: "INVALID_ARGUMENTS",
+                                    message: "Expected a map for method: show",
+                                    details: nil))
+                return
             }
-            
-        } else if(call.method == "show") {
-            guard let args = call.arguments else {
-                return result("Could not recognize flutter arguments in method: (show)")
-            }
-            if let args = args as? [String: Any]   {
-                var customTitle: NSAttributedString? = nil
-                if let title = args["title"] as? String {
-                    var attributes: [NSAttributedString.Key: Any] = [.font: UIFont.preferredFont(forTextStyle: .body)]
-                    if let titleFontSize = args["titleFontSize"] as? Int {
-                        attributes[.font] = UIFont.systemFont(ofSize: CGFloat(titleFontSize))
-                    }
-                    customTitle = NSAttributedString(string: title, attributes: attributes)
+
+            var customTitle: NSAttributedString? = nil
+            if let title = args["title"] as? String {
+                var attributes: [NSAttributedString.Key: Any] = [.font: UIFont.preferredFont(forTextStyle: .body)]
+                if let titleFontSize = args["titleFontSize"] as? Int {
+                    attributes[.font] = UIFont.systemFont(ofSize: CGFloat(titleFontSize))
                 }
-                
-                let viewMode = ViewMode(rawValue: args["viewMode"] as? Int ?? 0) ?? .default
-                Pisano.show(mode: viewMode, title: customTitle, flowId: args["flowId"] as? String, language: args["language"] as? String, customer: args["customer"] as? [String : Any], payload: args["payload"] as? [String : String]) { callback in
-                    result(callback.rawValue)
-                }
+                customTitle = NSAttributedString(string: title, attributes: attributes)
             }
-            
-        } else if(call.method == "track") {
-            guard let args = call.arguments else {
-                return result("Could not recognize flutter arguments in method: (track)")
+
+            let viewMode = ViewMode(rawValue: args["viewMode"] as? Int ?? 0) ?? .default
+            Pisano.show(mode: viewMode,
+                       title: customTitle,
+                       flowId: args["flowId"] as? String,
+                       language: args["language"] as? String,
+                       customer: args["customer"] as? [String: Any],
+                       payload: args["payload"] as? [String: String]) { callback in
+                result(callback.rawValue)
             }
-            if let args = args as? [String: Any]   {
-                Pisano.track(event: args["event"] as? String ?? "", payload: args["payload"] as? [String: String], customer: args["customer"] as? [String: Any], language: args["language"] as? String) { callback in
-                    result(callback.rawValue)
-                }
+
+        case "track":
+            guard let args = call.arguments as? [String: Any] else {
+                result(FlutterError(code: "INVALID_ARGUMENTS",
+                                    message: "Expected a map for method: track",
+                                    details: nil))
+                return
             }
-            
-        } else if (call.method == "clear") {
+
+            Pisano.track(event: args["event"] as? String ?? "",
+                        payload: args["payload"] as? [String: String],
+                        customer: args["customer"] as? [String: Any],
+                        language: args["language"] as? String) { callback in
+                result(callback.rawValue)
+            }
+
+        case "clear":
             Pisano.clear()
+            result(nil)
+
+        default:
+            result(FlutterMethodNotImplemented)
         }
     }
 }
