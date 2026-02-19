@@ -21,15 +21,16 @@ public class SwiftFeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
 
             let debugLogging = args["debugLogging"] as? Bool ?? false
             Pisano.debugMode(debugLogging)
+            let code = args["code"] as? String ?? ""
+            // SDK 1.0.17: code is required; parameter order: appId, accessKey, code, apiUrl, feedbackUrl, eventUrl
             Pisano.boot(appId: args["applicationId"] as? String ?? "",
                         accessKey: args["accessKey"] as? String ?? "",
+                        code: code,
                         apiUrl: args["apiUrl"] as? String ?? "",
                         feedbackUrl: args["feedbackUrl"] as? String ?? "",
-                        eventUrl: args["eventUrl"] as? String)
-
-            // Important: always return a result to Flutter. Otherwise `await init()`
-            // will hang and the app will think the SDK is not initialized.
-            result(nil)
+                        eventUrl: args["eventUrl"] as? String) { _ in
+                result(nil)
+            }
 
         case "show":
             guard let args = call.arguments as? [String: Any] else {
@@ -49,12 +50,13 @@ public class SwiftFeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
             }
 
             let viewMode = ViewMode(rawValue: args["viewMode"] as? Int ?? 0) ?? .default
+            // SDK 1.0.17: flowId removed; optional code overrides boot code for this call
             Pisano.show(mode: viewMode,
                        title: customTitle,
-                       flowId: args["flowId"] as? String,
                        language: args["language"] as? String,
                        customer: args["customer"] as? [String: Any],
-                       payload: args["payload"] as? [String: String]) { callback in
+                       payload: args["payload"] as? [String: String],
+                       code: args["code"] as? String) { callback in
                 result(callback.rawValue)
             }
 

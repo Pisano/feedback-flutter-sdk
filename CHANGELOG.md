@@ -1,3 +1,12 @@
+## 0.0.17
+
+* **BREAKING**: `code` is now a **required** parameter in `init()`. Pass the survey/channel code from the Pisano panel.
+* **BREAKING**: `flowId` parameter removed from `show()`. Use optional `code` parameter instead (omit to use the boot code).
+* Update iOS native SDK dependency to `~> 1.0.17`
+* Update Android native SDK dependency to `co.pisano:feedback:1.3.28`
+* Migrate example app Android Gradle config to declarative `plugins {}` block
+* Clean up unused imports and async modifiers in Dart API
+
 ## 0.0.16
 
 * No runtime/API changes compared to 0.0.15.

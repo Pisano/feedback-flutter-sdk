@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:developer';
 
 import 'package:feedback_flutter_sdk/feedback_flutter_sdk.dart';
@@ -28,7 +27,6 @@ class _MyAppState extends State<MyApp> {
     initPlatformState();
   }
 
-  // Platform messages are asynchronous, so we normalize in an async method.
   Future<void> initPlatformState() async {
     try {
       log('PisanoConfig: ${PisanoConfig.debugSummary()}');
@@ -50,6 +48,7 @@ class _MyAppState extends State<MyApp> {
         PisanoConfig.feedbackUrl,
         PisanoConfig.eventUrl,
         debugLogging: PisanoConfig.debugLogging,
+        code: PisanoConfig.code,
       );
       setState(() {
         _initialized = true;
@@ -64,9 +63,6 @@ class _MyAppState extends State<MyApp> {
       log('Pisano init failed: $e');
     }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
     if (!mounted) return;
   }
 
@@ -335,7 +331,6 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
       viewMode: _viewMode,
       title: title.isEmpty ? null : title,
       titleFontSize: _titleFontSize,
-      flowId: '',
       language: PisanoConfig.language,
       customer: customer.isEmpty ? {} : customer,
       payload: payload,
@@ -377,7 +372,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
         );
 
     return Scaffold(
-        appBar: AppBar(
+      appBar: AppBar(
         title: const Text('Pisano'),
         actions: [
           IconButton(
@@ -394,7 +389,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
               constraints: const BoxConstraints(maxWidth: 520),
               child: Padding(
                 padding: const EdgeInsets.all(16),
-          child: Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (!widget.initialized)
@@ -515,14 +510,14 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                         Expanded(
                           child: OutlinedButton(
                             onPressed: _onTrackPressed,
-                child: const Text('Track'),
-              ),
+                            child: const Text('Track'),
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: OutlinedButton(
                             onPressed: _onClearPressed,
-                child: const Text('Clear'),
+                            child: const Text('Clear'),
                           ),
                         ),
                       ],
