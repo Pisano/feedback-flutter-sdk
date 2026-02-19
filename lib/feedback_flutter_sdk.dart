@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/services.dart';
@@ -27,18 +26,18 @@ enum FeedbackCallback {
 class FeedbackFlutterSdk {
   static const MethodChannel _channel = MethodChannel('feedback_flutter_sdk');
 
-  ///
   Future<void> init(
       String applicationId,
       String accessKey,
       String apiUrl,
       String feedbackUrl,
       String? eventUrl,
-      {bool debugLogging = false}) async {
+      {bool debugLogging = false, required String code}) async {
     checkNotEmpty(applicationId, "application id cannot be empty");
     checkNotEmpty(accessKey, "access key cannot be empty");
     checkNotEmpty(apiUrl, "api url cannot be empty");
     checkNotEmpty(feedbackUrl, "feedback url cannot be empty");
+    checkNotEmpty(code, "code cannot be empty");
 
     await _channel.invokeMethod('init', {
       "applicationId": applicationId,
@@ -46,16 +45,17 @@ class FeedbackFlutterSdk {
       "apiUrl": apiUrl,
       "feedbackUrl": feedbackUrl,
       "eventUrl": eventUrl,
-      "debugLogging": debugLogging
+      "debugLogging": debugLogging,
+      "code": code
     });
   }
 
-  ///
+  /// Shows the feedback widget. [code] is optional; if omitted, boot code is used.
   Future<FeedbackCallback> show(
       {ViewMode viewMode = ViewMode.defaultMode,
       String? title,
       int? titleFontSize,
-      String? flowId,
+      String? code,
       String? language,
       customer,
       payload}) async {
@@ -63,7 +63,7 @@ class FeedbackFlutterSdk {
       "viewMode": viewMode.index,
       "title": title,
       "titleFontSize": titleFontSize,
-      "flowId": flowId,
+      "code": code,
       "language": language,
       "customer": customer,
       "payload": payload
@@ -72,7 +72,6 @@ class FeedbackFlutterSdk {
     return _callback(result);
   }
 
-  ///
   Future<FeedbackCallback> track(String event,
       {String? language, customer, payload}) async {
     final normalizedEvent = checkNotEmpty(event, "event cannot be empty");
@@ -90,18 +89,15 @@ class FeedbackFlutterSdk {
     await _channel.invokeMethod("clear");
   }
 
-  Future<FeedbackCallback> _callback(dynamic result) async {
+  FeedbackCallback _callback(dynamic result) {
     if (result is int) {
-      try {
-        final feedbackCallback = FeedbackCallback.values[result];
-        return feedbackCallback;
-      } catch (e) {
-        log('Non exist FeedbackCallback enum value');
+      if (result >= 0 && result < FeedbackCallback.values.length) {
+        return FeedbackCallback.values[result];
       }
+      log('Invalid FeedbackCallback index: $result');
     } else if (result is String) {
       log(result);
     }
-
     return FeedbackCallback.none;
   }
 }

@@ -15,9 +15,9 @@ void main() {
       } else if (methodCall.method == 'init') {
         return null;
       } else if (methodCall.method == 'show') {
-        return 1; // Success callback
+        return 1;
       } else if (methodCall.method == 'track') {
-        return 1; // Success callback
+        return 1;
       } else if (methodCall.method == 'clear') {
         return null;
       }
@@ -38,11 +38,10 @@ void main() {
         "apiUrl",
         "feedbackUrl",
         null,
+        code: "test-code",
       );
-      // If no exception thrown, test passes
       expect(true, isTrue);
     } catch (e) {
-      // Expected to work with mocked channel
       expect(true, isTrue);
     }
   });
@@ -56,11 +55,11 @@ void main() {
         "apiUrl",
         "feedbackUrl",
         null,
+        code: "test-code",
       );
       final result = await sdk.show();
       expect(result, FeedbackCallback.closed);
     } catch (e) {
-      // Expected to work with mocked channel
       expect(true, isTrue);
     }
   });
@@ -74,11 +73,11 @@ void main() {
         "apiUrl",
         "feedbackUrl",
         null,
+        code: "test-code",
       );
       final result = await sdk.track('test_event');
       expect(result, FeedbackCallback.closed);
     } catch (e) {
-      // Expected to work with mocked channel
       expect(true, isTrue);
     }
   });

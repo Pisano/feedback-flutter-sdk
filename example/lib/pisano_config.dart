@@ -22,6 +22,7 @@
 /// flutter run -d <device> \
 ///   --dart-define=PISANO_APP_ID=... \
 ///   --dart-define=PISANO_ACCESS_KEY=... \
+///   --dart-define=PISANO_CODE=PSN-xxx \
 ///   --dart-define=PISANO_API_URL=https://api.pisano.co \
 ///   --dart-define=PISANO_FEEDBACK_URL=https://web.pisano.co/web_feedback \
 ///   --dart-define=PISANO_EVENT_URL= \
@@ -32,6 +33,9 @@ class PisanoConfig {
       String.fromEnvironment('PISANO_APP_ID', defaultValue: 'YOUR_APP_ID');
   static const String accessKey = String.fromEnvironment('PISANO_ACCESS_KEY',
       defaultValue: 'YOUR_ACCESS_KEY');
+  /// Survey/channel code from Pisano panel (required for SDK init).
+  static const String code =
+      String.fromEnvironment('PISANO_CODE', defaultValue: 'YOUR_CODE');
   static const String apiUrl =
       String.fromEnvironment('PISANO_API_URL', defaultValue: 'YOUR_API_URL');
   static const String feedbackUrl = String.fromEnvironment('PISANO_FEEDBACK_URL',
@@ -53,6 +57,7 @@ class PisanoConfig {
   static bool get hasPlaceholders =>
       applicationId == 'YOUR_APP_ID' ||
       accessKey == 'YOUR_ACCESS_KEY' ||
+      code == 'YOUR_CODE' ||
       apiUrl == 'YOUR_API_URL' ||
       feedbackUrl == 'YOUR_FEEDBACK_URL';
 
@@ -65,11 +70,10 @@ class PisanoConfig {
 
     return 'appId=${describeSecret(applicationId, "YOUR_APP_ID")}, '
         'accessKey=${describeSecret(accessKey, "YOUR_ACCESS_KEY")}, '
+        'code=${describeSecret(code, "YOUR_CODE")}, '
         'apiUrl=$apiUrl, '
         'feedbackUrl=$feedbackUrl, '
         'eventUrl=${eventUrl ?? ""}, '
         'language=$language';
   }
 }
-
-

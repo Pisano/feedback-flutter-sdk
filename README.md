@@ -72,6 +72,7 @@ await feedbackSdk.init(
   '<feedbackUrl>',
   null, // eventUrl (optional)
   debugLogging: false,
+  code: '<surveyOrChannelCode>', // required; from Pisano panel
 );
 ```
 
@@ -82,7 +83,7 @@ final callback = await feedbackSdk.show(
   viewMode: ViewMode.bottomSheetMode,
   title: 'We Value Your Feedback',
   titleFontSize: 20,
-  flowId: '', // empty => default flow
+  code: null, // optional; if omitted, boot code is used
   language: 'tr',
   customer: {
     'name': 'John Doe',
@@ -120,9 +121,10 @@ await feedbackSdk.clear();
 
 ### `FeedbackFlutterSdk`
 
-- **`Future<void> init(applicationId, accessKey, apiUrl, feedbackUrl, eventUrl, {debugLogging})`**
-  - Must be called before `show` / `track`
-- **`Future<FeedbackCallback> show({viewMode, title, titleFontSize, flowId, language, customer, payload})`**
+- **`Future<void> init(applicationId, accessKey, apiUrl, feedbackUrl, eventUrl, {debugLogging, required code})`**
+  - Must be called before `show` / `track`. `code` is the survey/channel code from the Pisano panel.
+- **`Future<FeedbackCallback> show({viewMode, title, titleFontSize, code, language, customer, payload})`**
+  - `code` is optional; if omitted, the boot code is used.
 - **`Future<FeedbackCallback> track(event, {language, customer, payload})`**
 - **`Future<void> clear()`**
 

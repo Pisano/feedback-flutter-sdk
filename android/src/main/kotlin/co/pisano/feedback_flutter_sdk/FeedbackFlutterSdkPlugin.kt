@@ -16,12 +16,7 @@ import android.util.Log
 import co.pisano.feedback.data.helper.ViewMode
 import co.pisano.feedback.data.model.Title
 
-/** FeedbackFlutterSdkPlugin */
 class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
-    /// The MethodChannel that will the communication between Flutter and native Android
-    ///
-    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-    /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
     private var actionCallback: ((PisanoActions) -> Unit)? = null
@@ -46,6 +41,7 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
                     val manager = PisanoSDKManager.Builder(context)
                         .setApplicationId(call.argument<String>("applicationId"))
                         .setAccessKey(call.argument<String>("accessKey"))
+                        .setCode(call.argument<String>("code"))
                         .setApiUrl(call.argument<String>("apiUrl"))
                         .setFeedbackUrl(call.argument<String>("feedbackUrl"))
                         .setEventUrl(call.argument<String?>("eventUrl"))
@@ -76,7 +72,7 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
                     PisanoSDK.show(
                         viewMode = viewMode,
                         title = title,
-                        flowId = call.argument<String?>("flowId"),
+                        code = call.argument<String?>("code"),
                         language = call.argument<String?>("language"),
                         payload = payload,
                         pisanoCustomer = customerModel
@@ -134,7 +130,6 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler {
             result.error("ERROR", "An error occured during the process: ${e.message}", null)
         }
     }
-
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
