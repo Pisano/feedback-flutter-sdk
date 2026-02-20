@@ -22,7 +22,6 @@ public class SwiftFeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
             let debugLogging = args["debugLogging"] as? Bool ?? false
             Pisano.debugMode(debugLogging)
             let code = args["code"] as? String ?? ""
-            // SDK 1.0.17: code is required; parameter order: appId, accessKey, code, apiUrl, feedbackUrl, eventUrl
             Pisano.boot(appId: args["applicationId"] as? String ?? "",
                         accessKey: args["accessKey"] as? String ?? "",
                         code: code,
@@ -50,7 +49,6 @@ public class SwiftFeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
             }
 
             let viewMode = ViewMode(rawValue: args["viewMode"] as? Int ?? 0) ?? .default
-            // SDK 1.0.17: flowId removed; optional code overrides boot code for this call
             Pisano.show(mode: viewMode,
                        title: customTitle,
                        language: args["language"] as? String,
