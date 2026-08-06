@@ -1,3 +1,11 @@
+## 0.0.18
+
+* Native pin bump for MT-38 (`disable_zoom` + keyboard/viewport) and MT-41 bottom sheet (via native SDK).
+* Update iOS native SDK dependency to `~> 1.0.21`
+* Update Android native SDK dependency to `co.pisano:feedback:1.3.33`
+* Sync podspec version with pubspec (`0.0.18`)
+* No Dart API changes — zoom controlled via Pisano channel config (`disable_zoom`)
+
 ## 0.0.17
 
 * **BREAKING**: `code` is now a **required** parameter in `init()`. Pass the survey/channel code from the Pisano panel.
