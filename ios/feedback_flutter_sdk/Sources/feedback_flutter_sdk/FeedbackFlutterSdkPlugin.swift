@@ -2,10 +2,11 @@ import Flutter
 import UIKit
 import PisanoFeedback
 
-public class SwiftFeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
+@objc(FeedbackFlutterSdkPlugin)
+public class FeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "feedback_flutter_sdk", binaryMessenger: registrar.messenger())
-        let instance = SwiftFeedbackFlutterSdkPlugin()
+        let instance = FeedbackFlutterSdkPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
     
@@ -82,3 +83,8 @@ public class SwiftFeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
         }
     }
 }
+
+/// Kept for source compatibility with releases before the Swift Package Manager
+/// migration, where the plugin was registered through an Objective-C shim.
+@available(*, deprecated, renamed: "FeedbackFlutterSdkPlugin")
+public typealias SwiftFeedbackFlutterSdkPlugin = FeedbackFlutterSdkPlugin

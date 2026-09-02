@@ -1,3 +1,12 @@
+## Unreleased
+
+* Add Swift Package Manager (SPM) support for iOS, alongside the existing CocoaPods support.
+  * Add `ios/feedback_flutter_sdk/Package.swift`, depending on the [`Pisano/pisano-ios`](https://github.com/Pisano/pisano-ios) Swift package (`PisanoFeedback`), mirroring the podspec's `~> 1.0.21` constraint.
+  * Move iOS sources to `ios/feedback_flutter_sdk/Sources/feedback_flutter_sdk/`; the podspec's `source_files` points at the new location, so CocoaPods keeps working unchanged.
+  * Replace the Objective-C registrar shim with the Swift plugin class, renamed from `SwiftFeedbackFlutterSdkPlugin` to `FeedbackFlutterSdkPlugin` and annotated with `@objc(FeedbackFlutterSdkPlugin)`. `pluginClass` in `pubspec.yaml` is unchanged, and a deprecated `SwiftFeedbackFlutterSdkPlugin` typealias is kept for source compatibility.
+  * Raise the podspec's iOS platform from `9.0` to `12.0`, matching the native SDK's stated requirement.
+* No Dart API changes.
+
 ## 0.0.18
 
 * Native pin bump for MT-38 (`disable_zoom` + keyboard/viewport) and MT-41 bottom sheet (via native SDK).
