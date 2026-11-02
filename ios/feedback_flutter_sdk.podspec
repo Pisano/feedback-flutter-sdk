@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'feedback_flutter_sdk'
-  s.version          = '0.1.0'
+  s.version          = '1.0.0'
   s.summary          = 'Feedback flutter sdk.'
   s.description      = <<-DESC
 Feedback flutter sdk.

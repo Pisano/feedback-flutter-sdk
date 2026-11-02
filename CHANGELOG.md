@@ -1,4 +1,4 @@
-## 0.1.0 (unreleased)
+## 1.0.0 (unreleased)
 
 Moves the plugin onto the native Pisano 2.0 SDKs (iOS `Pisano ~> 2.0.0`,
 Android `co.pisano:feedback:2.0.0`). Both report one result per `show()` and
