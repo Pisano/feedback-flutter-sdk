@@ -16,10 +16,15 @@ If you’re looking for the native iOS sample apps, see the Pisano iOS sample re
 
 ## 📱 Requirements
 
-- **Flutter**: tested with Flutter `3.38.3` (Dart `3.10.1`)
-- **iOS**: **iOS 15.0+** (native Pisano SDK 2.0); Xcode 16+, CocoaPods `>= 1.13` or Swift Package Manager
-- **Dart**: `>= 2.17`
-- **Android development**: Android SDK 34+ and Java 17
+| Requirement | Minimum | Notes |
+|---|---|---|
+| Flutter | **3.0+** | Tested with Flutter `3.38.3` / Dart `3.10.1`. The Swift Package Manager path needs a Flutter version with SPM support turned on. |
+| Dart | **2.17+** | — |
+| iOS | **iOS 15.0+ · Xcode 16+** | Native Pisano SDK 2.0. Swift Package Manager **or** CocoaPods `>= 1.13`. |
+| Android | **`minSdk` 21 · `compileSdk` 34+ · JDK 17** | The native `co.pisano:feedback` 2.0 AAR requires `minSdk` 21 and `compileSdk` 34 (the build fails below). |
+| Platforms | `android`, `ios` | No web or desktop. |
+
+Minimum versions are raised only in a major or `0.x` minor release, with a migration note.
 
 Native SDK versions are an internal implementation detail for most consumers.
 If you are contributing to the plugin or debugging native builds, see `DEVELOPMENT.md`.
