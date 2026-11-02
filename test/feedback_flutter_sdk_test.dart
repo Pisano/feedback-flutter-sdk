@@ -11,11 +11,13 @@ void main() {
   final calls = <MethodCall>[];
   dynamic showResult;
   dynamic initResult;
+  dynamic trackResult;
 
   setUp(() {
     calls.clear();
     showResult = 'closed';
     initResult = true;
+    trackResult = true;
     binding.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
       calls.add(methodCall);
@@ -26,6 +28,8 @@ void main() {
           return showResult;
         case 'healthCheck':
           return true;
+        case 'track':
+          return trackResult;
         default:
           return null;
       }
@@ -134,12 +138,17 @@ void main() {
     expect(calls.single.arguments['customer'], {'externalId': 'USR-1'});
   });
 
-  test('track is fire-and-forget', () async {
+  test('track completes with the native result', () async {
     final sdk = FeedbackFlutterSdk();
-    await sdk.track('test_event', payload: {'a': 'b'});
+    expect(await sdk.track('test_event', payload: {'a': 'b'}), isTrue);
     expect(calls.single.method, 'track');
     expect(calls.single.arguments['event'], 'test_event');
     expect(() => sdk.track(''), throwsException);
+
+    trackResult = false;
+    expect(await sdk.track('test_event'), isFalse);
+    trackResult = null;
+    expect(await sdk.track('test_event'), isFalse);
   });
 
   test('setAutomaticStoreReview forwards the flag', () async {

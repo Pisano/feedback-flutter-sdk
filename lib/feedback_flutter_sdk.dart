@@ -341,17 +341,19 @@ class FeedbackFlutterSdk {
   /// configured as a trigger, a survey opens on its own and reports through
   /// [events].
   ///
-  /// Fire-and-forget: completes once the event is handed to the native SDK.
-  /// Only iOS reports whether it was sent, so the plugin does not surface it.
-  Future<void> track(String event,
+  /// Completes with `true` when the server accepted the event, `false`
+  /// otherwise (not initialized, no `eventUrl`, no connection, or the request
+  /// failed).
+  Future<bool> track(String event,
       {String? language, Object? customer, Map<String, String>? payload}) async {
     final normalizedEvent = checkNotEmpty(event, "event cannot be empty");
-    await _channel.invokeMethod('track', {
+    final sent = await _channel.invokeMethod<bool>('track', {
       "event": normalizedEvent,
       "language": language,
       "customer": normalizeCustomer(customer),
       "payload": payload
     });
+    return sent ?? false;
   }
 
   /// Whether the SDK asks the system for the store review prompt when a

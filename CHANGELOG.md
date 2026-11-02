@@ -15,9 +15,9 @@ the survey events through a separate channel; the plugin does the same.
   send `ordinal + 1`, so every Android result was off by one (a closed survey
   arrived as `sendFeedback`); this is fixed.
 * **BREAKING**: `init()` completes with a `bool` (`true` when the SDK booted).
-* **BREAKING**: `track()` returns `Future<void>` (fire-and-forget). It used to
-  wait on the next survey result and could steal a pending `show()` result on
-  Android.
+* **BREAKING**: `track()` returns `Future<bool>`: `true` when the server
+  accepted the event. It used to wait on the next survey result and could
+  steal a pending `show()` result on Android.
 * **BREAKING**: `payload` is typed `Map<String, String>?`; `customer` is a
   `PisanoCustomer` or a `Map`. The Android plugin read `customAttrs` while the
   README documented it, so custom attributes were dropped on Android; both
@@ -27,8 +27,10 @@ the survey events through a separate channel; the plugin does the same.
 * Results follow one rule on both platforms: a submitted survey completes
   `sendFeedback` however the widget closes afterwards; a survey that is not
   shown, or whose page cannot load, completes `none` (on iOS a `show()` without
-  a successful boot used to never complete). One `show()` at a time: a second
-  one completes `none`; `clear()` completes a pending one with `none`.
+  a successful boot used to never complete). One survey at a time: a `show()`
+  while one is open or about to open completes `none`; `clear()` completes a
+  pending one with `none`. Both rules are in the native SDKs; the plugins keep
+  no `show()` state and complete each call from its own native result.
 * Add `events` (`Stream<PisanoEvent>`): `opened`, `feedbackSubmitted`
   (`hasChat`), `redirectedToStore` (`handledBySDK`), `closed` (`closeReason`).
 * Add `show(dismissOnDrag:)`, `healthCheck()`, `setAutomaticStoreReview()` and

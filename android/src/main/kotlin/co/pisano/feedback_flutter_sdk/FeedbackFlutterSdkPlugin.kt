@@ -25,10 +25,6 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler, EventChannel.
     private lateinit var eventChannel: EventChannel
     private lateinit var context: Context
 
-    // The show() call in flight: a second show() completes with "none" right
-    // away (the native SDK applies the same rule), and clear() completes the
-    // pending one with "none" (clearAction() does not end it).
-    private var pendingShow: Result? = null
     private var eventSubscription: PisanoSubscription? = null
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
@@ -68,12 +64,8 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler, EventChannel.
                 }
 
                 "show" -> {
-                    if (pendingShow != null) {
-                        result.success(resultName(CloseStatus.NONE))
-                        return
-                    }
-                    pendingShow = result
-
+                    // One result per call. The native SDK opens one survey at a
+                    // time: a show() while one is open or about to open ends with NONE.
                     val viewMode: ViewMode = ViewMode.parse(call.argument<Int>("viewMode") ?: 0) ?: ViewMode.DEFAULT
                     val titleArg = call.argument<String?>("title")
                     val title = if (!titleArg.isNullOrBlank()) {
@@ -90,7 +82,7 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler, EventChannel.
                         payload = call.argument<HashMap<String, String>>("payload"),
                         pisanoCustomer = buildPisanoCustomer(call.argument<Map<String, Any?>>("customer")),
                         dismissOnDrag = call.argument<Boolean>("dismissOnDrag") ?: false,
-                    ) { status -> completeShow(resultName(status)) }
+                    ) { status -> result.success(resultName(status)) }
                 }
 
                 "healthCheck" -> {
@@ -109,14 +101,12 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler, EventChannel.
                         return
                     }
 
-                    // Fire-and-forget: the native SDK reports no result for track.
                     PisanoSDK.track(
                         event = eventName,
                         payload = call.argument<HashMap<String, String>>("payload"),
                         pisanoCustomer = buildPisanoCustomer(call.argument<Map<String, Any?>>("customer")),
                         languageCode = call.argument<String?>("language"),
-                    )
-                    result.success(null)
+                    ) { sent -> result.success(sent) }
                 }
 
                 "setAutomaticStoreReview" -> {
@@ -125,8 +115,8 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler, EventChannel.
                 }
 
                 "clear" -> {
-                    PisanoSDK.clearAction()
-                    completeShow(resultName(CloseStatus.NONE))
+                    // Closes an open survey and ends a pending show() with NONE.
+                    PisanoSDK.clear()
                     result.success(null)
                 }
 
@@ -137,7 +127,7 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler, EventChannel.
         } catch (e: Exception) {
             Log.e(TAG, "An error occured: ${e.message}", e)
             if (call.method == "show") {
-                completeShow(resultName(CloseStatus.NONE))
+                result.success(resultName(CloseStatus.NONE))
             } else {
                 result.error("ERROR", "An error occured during the process: ${e.message}", null)
             }
@@ -159,12 +149,6 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler, EventChannel.
         eventChannel.setStreamHandler(null)
         eventSubscription?.cancel()
         eventSubscription = null
-    }
-
-    private fun completeShow(name: String) {
-        val result = pendingShow ?: return
-        pendingShow = null
-        result.success(name)
     }
 
     companion object {

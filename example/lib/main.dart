@@ -368,13 +368,13 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
   Future<void> _onTrackPressed() async {
     if (!widget.initialized) return;
 
-    await widget.feedbackSdk.track(
+    final sent = await widget.feedbackSdk.track(
       'view_promo',
       customer: PisanoCustomer(externalId: _textOrNull(_externalIdController)),
       payload: const {'source': 'flutter_example'},
       language: PisanoConfig.language,
     );
-    log('track sent');
+    log('track sent: $sent');
   }
 
   Future<void> _onHealthCheckPressed() async {

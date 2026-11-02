@@ -129,7 +129,7 @@ await subscription.cancel();
 ### 5) Track event
 
 ```dart
-await feedbackSdk.track(
+final sent = await feedbackSdk.track(
   'view_promo',
   language: 'tr',
   customer: const PisanoCustomer(externalId: 'CRM-12345'),
@@ -156,8 +156,8 @@ await feedbackSdk.clear();
   - `dismissOnDrag` (bottom sheet only, default `false`) lets the user drag the sheet away.
 - **`Future<bool> healthCheck({code, language, customer, payload})`**
   - Whether `show()` would open a survey right now, without showing anything.
-- **`Future<void> track(event, {language, customer, payload})`**
-  - Sends a custom event to the trigger engine. A survey it triggers opens on its own and reports through `events`.
+- **`Future<bool> track(event, {language, customer, payload})`**
+  - Sends a custom event to the trigger engine; completes with `true` when the server accepted it (`false`: not initialized, no `eventUrl`, no connection, or the request failed). A survey it triggers opens on its own and reports through `events`.
 - **`Stream<PisanoEvent> events`** — see [Survey events](#pisanoevent--survey-events).
 - **`Future<void> setAutomaticStoreReview(bool enabled)`**
   - Whether the SDK asks the system for the store review prompt when a survey redirects to the store. Defaults to `true` (again on every app start). Turn it off to run your own flow on the `redirectedToStore` event (`handledBySDK` is `false`). The `show()` result does not change.

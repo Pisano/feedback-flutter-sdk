@@ -4,11 +4,6 @@ import PisanoFeedback
 
 @objc(FeedbackFlutterSdkPlugin)
 public class FeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
-    // The show() call in flight. A second show() completes with "none" right
-    // away (the Android SDK applies the same rule natively), and clear()
-    // completes the pending one with "none".
-    private var pendingShow: FlutterResult?
-
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "feedback_flutter_sdk", binaryMessenger: registrar.messenger())
         let instance = FeedbackFlutterSdkPlugin()
@@ -37,11 +32,8 @@ public class FeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
 
         case "show":
             guard let args = arguments(call, result) else { return }
-            guard pendingShow == nil else {
-                result(Self.resultName(.none))
-                return
-            }
-            pendingShow = result
+            // One result per call. The native SDK opens one survey at a time: a
+            // show() while one is open or about to open ends with .none.
 
             var customTitle: NSAttributedString? = nil
             if let title = args["title"] as? String {
@@ -59,8 +51,8 @@ public class FeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
                         pisanoCustomer: Self.customer(args["customer"]),
                         payload: args["payload"] as? [String: String],
                         code: args["code"] as? String,
-                        dismissOnDrag: args["dismissOnDrag"] as? Bool ?? false) { [weak self] status in
-                self?.completeShow(Self.resultName(status))
+                        dismissOnDrag: args["dismissOnDrag"] as? Bool ?? false) { status in
+                result(Self.resultName(status))
             }
 
         case "healthCheck":
@@ -74,13 +66,12 @@ public class FeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
 
         case "track":
             guard let args = arguments(call, result) else { return }
-            // Fire-and-forget: only iOS reports whether the event was sent, so
-            // the plugin does not surface it.
             Pisano.track(event: args["event"] as? String ?? "",
                          payload: args["payload"] as? [String: String],
                          pisanoCustomer: Self.customer(args["customer"]),
-                         language: args["language"] as? String) { _ in }
-            result(nil)
+                         language: args["language"] as? String) { sent in
+                result(sent)
+            }
 
         case "setAutomaticStoreReview":
             guard let args = arguments(call, result) else { return }
@@ -88,11 +79,8 @@ public class FeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
             result(nil)
 
         case "clear":
+            // Closes an open survey and ends a pending show() with .none.
             Pisano.clear()
-            // Pisano.clear() ends a pending show() with .none itself; completing
-            // here too keeps it immediate and matches Android, whose
-            // clearAction() does not end it.
-            completeShow(Self.resultName(.none))
             result(nil)
 
         default:
@@ -108,12 +96,6 @@ public class FeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
             return nil
         }
         return args
-    }
-
-    private func completeShow(_ name: String) {
-        guard let result = pendingShow else { return }
-        pendingShow = nil
-        result(name)
     }
 
     /// The customer map (keys already mapped onto the PisanoCustomer field
