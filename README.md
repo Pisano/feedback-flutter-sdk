@@ -161,6 +161,8 @@ await feedbackSdk.clear();
 - **`Stream<PisanoEvent> events`** — see [Survey events](#pisanoevent--survey-events).
 - **`Future<void> setAutomaticStoreReview(bool enabled)`**
   - Whether the SDK asks the system for the store review prompt when a survey redirects to the store. Defaults to `true` (again on every app start). Turn it off to run your own flow on the `redirectedToStore` event (`handledBySDK` is `false`). The `show()` result does not change.
+- **`Future<void> setRequestTimeout(Duration timeout)`**
+  - Network timeout of every SDK request, in whole seconds: a request fails when the server sends no data for this long. Defaults to 30 seconds on both platforms; applies to requests that start after it is set. Less than 1 second is ignored.
 - **`Future<void> clear()`**
   - Ends the session; a `show()` still pending completes with `FeedbackCallback.none`.
 

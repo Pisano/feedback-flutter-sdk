@@ -114,6 +114,11 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler, EventChannel.
                     result.success(null)
                 }
 
+                "setRequestTimeout" -> {
+                    call.argument<Number>("seconds")?.let { PisanoSDK.requestTimeout = it.toLong() }
+                    result.success(null)
+                }
+
                 "clear" -> {
                     // Closes an open survey and ends a pending show() with NONE.
                     PisanoSDK.clear()

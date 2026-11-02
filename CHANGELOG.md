@@ -33,6 +33,8 @@ the survey events through a separate channel; the plugin does the same.
   no `show()` state and complete each call from its own native result.
 * Add `events` (`Stream<PisanoEvent>`): `opened`, `feedbackSubmitted`
   (`hasChat`), `redirectedToStore` (`handledBySDK`), `closed` (`closeReason`).
+* Add `setRequestTimeout(Duration)`: network timeout of every SDK request
+  (default 30 seconds on both platforms).
 * Add `show(dismissOnDrag:)`, `healthCheck()`, `setAutomaticStoreReview()` and
   the `PisanoCustomer` class.
 * Android: `init(debugLogging:)` now turns on the native debug log too.

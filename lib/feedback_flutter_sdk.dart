@@ -365,6 +365,19 @@ class FeedbackFlutterSdk {
     await _channel.invokeMethod('setAutomaticStoreReview', {"enabled": enabled});
   }
 
+  /// Network timeout of every SDK request, in whole seconds: a request fails
+  /// when the server sends no data for this long. Defaults to 30 seconds on
+  /// both platforms and applies to requests that start after it is set. A
+  /// timeout below 1 second is ignored.
+  Future<void> setRequestTimeout(Duration timeout) async {
+    final seconds = timeout.inSeconds;
+    if (seconds < 1) {
+      log('setRequestTimeout($timeout) ignored: use 1 second or more');
+      return;
+    }
+    await _channel.invokeMethod('setRequestTimeout', {"seconds": seconds});
+  }
+
   /// Ends the session: a survey still pending completes with
   /// [FeedbackCallback.none].
   Future<void> clear() async {

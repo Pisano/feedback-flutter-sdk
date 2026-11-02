@@ -158,6 +158,21 @@ void main() {
     expect(calls.single.arguments, {'enabled': false});
   });
 
+  test('setRequestTimeout forwards whole seconds, ignores less than 1 s',
+      () async {
+    final sdk = FeedbackFlutterSdk();
+    await sdk.setRequestTimeout(const Duration(seconds: 15));
+    await sdk.setRequestTimeout(const Duration(milliseconds: 20700));
+    await sdk.setRequestTimeout(const Duration(milliseconds: 500));
+    await sdk.setRequestTimeout(Duration.zero);
+    expect(calls.map((c) => c.method),
+        ['setRequestTimeout', 'setRequestTimeout']);
+    expect(calls.map((c) => c.arguments), [
+      {'seconds': 15},
+      {'seconds': 20},
+    ]);
+  });
+
   test('PisanoEvent.fromMap reads the native event map', () {
     final closed = PisanoEvent.fromMap({
       'type': 'closed',

@@ -78,6 +78,13 @@ public class FeedbackFlutterSdkPlugin: NSObject, FlutterPlugin {
             Pisano.automaticStoreReview = args["enabled"] as? Bool ?? true
             result(nil)
 
+        case "setRequestTimeout":
+            guard let args = arguments(call, result) else { return }
+            if let seconds = args["seconds"] as? Int {
+                Pisano.requestTimeout = TimeInterval(seconds)
+            }
+            result(nil)
+
         case "clear":
             // Closes an open survey and ends a pending show() with .none.
             Pisano.clear()
