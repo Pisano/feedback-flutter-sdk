@@ -400,8 +400,9 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
     log('requestTimeout = $seconds s');
   }
 
-  // One survey at a time: the second show() completes with `none` while the
-  // first survey stays open.
+  // One survey at a time: the call whose request comes back first opens the
+  // survey and the other completes with `none`. That is not always the second
+  // call, so the status line shows both results ("Show" and "2nd show").
   Future<void> _onShowTwicePressed() async {
     if (!widget.initialized) return;
     setState(() => _secondShowStatus = null);
@@ -619,7 +620,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                     const SizedBox(height: 12),
                     OutlinedButton(
                       onPressed: _onShowTwicePressed,
-                      child: const Text('Show twice (2nd → none)'),
+                      child: const Text('Show twice (one → none)'),
                     ),
                     const SizedBox(height: 14),
                     Text(
