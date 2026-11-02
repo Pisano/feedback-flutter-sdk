@@ -293,6 +293,10 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
 
   bool _dismissOnDrag = false;
   bool _automaticStoreReview = true;
+  // Network timeout of every SDK request; 30 s is the default on both platforms.
+  int _requestTimeoutSeconds = 30;
+  bool? _lastTrackSent;
+  FeedbackCallback? _secondShowStatus;
 
   FeedbackCallback? _lastShowStatus;
   bool? _lastHealthCheck;
@@ -374,6 +378,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
       payload: const {'source': 'flutter_example'},
       language: PisanoConfig.language,
     );
+    setState(() => _lastTrackSent = sent);
     log('track sent: $sent');
   }
 
@@ -386,6 +391,29 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
     );
     setState(() => _lastHealthCheck = canShow);
     log('healthCheck: $canShow');
+  }
+
+  Future<void> _onRequestTimeoutChanged(int? seconds) async {
+    if (seconds == null) return;
+    await widget.feedbackSdk.setRequestTimeout(Duration(seconds: seconds));
+    setState(() => _requestTimeoutSeconds = seconds);
+    log('requestTimeout = $seconds s');
+  }
+
+  // One survey at a time: the second show() completes with `none` while the
+  // first survey stays open.
+  Future<void> _onShowTwicePressed() async {
+    if (!widget.initialized) return;
+    setState(() => _secondShowStatus = null);
+    final first = _onGetFeedbackPressed();
+    final second = await widget.feedbackSdk.show(
+      viewMode: _viewMode,
+      language: PisanoConfig.language,
+      dismissOnDrag: _dismissOnDrag,
+    );
+    setState(() => _secondShowStatus = second);
+    log('show twice, 2nd: $second');
+    await first;
   }
 
   Future<void> _onAutomaticStoreReviewChanged(bool enabled) async {
@@ -488,6 +516,17 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                       value: _automaticStoreReview,
                       onChanged: _onAutomaticStoreReviewChanged,
                     ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Request timeout'),
+                      trailing: DropdownButton<int>(
+                        value: _requestTimeoutSeconds,
+                        items: const [30, 5, 60]
+                            .map((s) => DropdownMenuItem(value: s, child: Text('$s s')))
+                            .toList(),
+                        onChanged: _onRequestTimeoutChanged,
+                      ),
+                    ),
                     const SizedBox(height: 18),
                     Text('Custom Title Color', style: headerStyle),
                     const SizedBox(height: 8),
@@ -577,10 +616,17 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: _onShowTwicePressed,
+                      child: const Text('Show twice (2nd → none)'),
+                    ),
                     const SizedBox(height: 14),
                     Text(
                       'Status: Show: ${_lastShowStatus == null ? '-' : _enumName(_lastShowStatus)}'
-                      ' · Health check: ${_lastHealthCheck ?? '-'}',
+                      ' · 2nd show: ${_secondShowStatus == null ? '-' : _enumName(_secondShowStatus)}'
+                      ' · Health check: ${_lastHealthCheck ?? '-'}'
+                      ' · Track sent: ${_lastTrackSent ?? '-'}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: const Color(0xFF6B7280),
                           ),
