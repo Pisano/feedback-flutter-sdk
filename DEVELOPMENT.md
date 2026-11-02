@@ -42,8 +42,9 @@ Channel contract (both plugins):
 - `show` replies with the `FeedbackCallback` **name** (`"sendFeedback"`, …),
   never an ordinal or raw value — the native enums do not line up (iOS
   `CloseStatus` has gaps since 2.0). Dart maps unknown names to `none`.
-- `init` and `healthCheck` reply with a `bool`; `track`, `clear` and
-  `setAutomaticStoreReview` reply with `null`.
+- `init`, `healthCheck` and `track` reply with a `bool`; `clear`,
+  `setAutomaticStoreReview` and `setRequestTimeout` (whole seconds) reply
+  with `null`.
 - The `feedback_flutter_sdk/events` `EventChannel` sends one map per survey
   event: `type`, `code`, `hasChat`, `closeReason` (`null` except for
   `closed`), `handledBySDK`. Each plugin subscribes to the native
@@ -51,8 +52,9 @@ Channel contract (both plugins):
 - The customer arrives with the `PisanoCustomer` field names (Dart
   `normalizeCustomer` maps other spellings); both plugins build the native
   `PisanoCustomer` from it.
-- One `show()` at a time: a second one replies `"none"` right away, and
-  `clear` replies `"none"` to a pending one.
+- Each `show()` replies from its own native result; the plugins keep no
+  `show()` state. The native SDKs open one survey at a time (a second `show()`
+  replies `"none"`), and their `clear` ends a pending one with `"none"`.
 
 ## Environment Setup
 
