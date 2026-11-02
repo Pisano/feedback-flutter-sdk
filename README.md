@@ -169,7 +169,7 @@ await feedbackSdk.clear();
 - **`Future<void> setRequestTimeout(Duration timeout)`**
   - Network timeout of every SDK request, in whole seconds: a request fails when the server sends no data for this long. Defaults to 30 seconds on both platforms; applies to requests that start after it is set. Less than 1 second is ignored.
 - **`Future<void> clear()`**
-  - Ends the session; a `show()` still pending completes with `FeedbackCallback.none`.
+  - Ends the session; a `show()` still pending completes with `FeedbackCallback.none`. The native SDKs also forget the boot settings: call `init()` again for the next user (until then `show()` completes `none`, `track()` / `healthCheck()` `false`).
 
 ### `ViewMode`
 

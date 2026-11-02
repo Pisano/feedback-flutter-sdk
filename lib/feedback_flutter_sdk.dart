@@ -379,7 +379,8 @@ class FeedbackFlutterSdk {
   }
 
   /// Ends the session: a survey still pending completes with
-  /// [FeedbackCallback.none].
+  /// [FeedbackCallback.none]. The native SDKs also forget the boot settings:
+  /// call [init] again for the next user.
   Future<void> clear() async {
     await _channel.invokeMethod("clear");
   }
