@@ -105,7 +105,7 @@ class FeedbackFlutterSdkPlugin : FlutterPlugin, MethodCallHandler, EventChannel.
                         event = eventName,
                         payload = call.argument<HashMap<String, String>>("payload"),
                         pisanoCustomer = buildPisanoCustomer(call.argument<Map<String, Any?>>("customer")),
-                        languageCode = call.argument<String?>("language"),
+                        language = call.argument<String?>("language"),
                     ) { sent -> result.success(sent) }
                 }
 
