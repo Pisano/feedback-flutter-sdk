@@ -30,11 +30,29 @@ test/                   # Dart unit tests (channel mocks)
 
 Native SDK dependencies:
 
-- Android: `co.pisano:feedback:1.3.27`
-- iOS: `Pisano (~> 1.0.16)`
+- Android: `co.pisano:feedback:2.0.0`
+- iOS: `Pisano (~> 2.0.0)` (CocoaPods) / `pisano-ios` from `2.0.0` (Swift Package Manager), iOS 15.0+
 
 Any backend communication happens through these native SDKs. Keep versions in
-`android/build.gradle` and `ios/feedback_flutter_sdk.podspec` aligned.
+`android/build.gradle`, `ios/feedback_flutter_sdk.podspec` and
+`ios/feedback_flutter_sdk/Package.swift` aligned.
+
+Channel contract (both plugins):
+
+- `show` replies with the `FeedbackCallback` **name** (`"sendFeedback"`, …),
+  never an ordinal or raw value — the native enums do not line up (iOS
+  `CloseStatus` has gaps since 2.0). Dart maps unknown names to `none`.
+- `init` and `healthCheck` reply with a `bool`; `track`, `clear` and
+  `setAutomaticStoreReview` reply with `null`.
+- The `feedback_flutter_sdk/events` `EventChannel` sends one map per survey
+  event: `type`, `code`, `hasChat`, `closeReason` (`null` except for
+  `closed`), `handledBySDK`. Each plugin subscribes to the native
+  `subscribe` API while Dart listens.
+- The customer arrives with the `PisanoCustomer` field names (Dart
+  `normalizeCustomer` maps other spellings); both plugins build the native
+  `PisanoCustomer` from it.
+- One `show()` at a time: a second one replies `"none"` right away, and
+  `clear` replies `"none"` to a pending one.
 
 ## Environment Setup
 

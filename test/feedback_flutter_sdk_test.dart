@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feedback_flutter_sdk/feedback_flutter_sdk.dart';
@@ -6,22 +8,27 @@ void main() {
   const MethodChannel channel = MethodChannel('feedback_flutter_sdk');
 
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
+  final calls = <MethodCall>[];
+  dynamic showResult;
+  dynamic initResult;
 
   setUp(() {
+    calls.clear();
+    showResult = 'closed';
+    initResult = true;
     binding.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-      if (methodCall.method == 'getPlatformVersion') {
-        return '42';
-      } else if (methodCall.method == 'init') {
-        return null;
-      } else if (methodCall.method == 'show') {
-        return 1;
-      } else if (methodCall.method == 'track') {
-        return 1;
-      } else if (methodCall.method == 'clear') {
-        return null;
+      calls.add(methodCall);
+      switch (methodCall.method) {
+        case 'init':
+          return initResult;
+        case 'show':
+          return showResult;
+        case 'healthCheck':
+          return true;
+        default:
+          return null;
       }
-      return null;
     });
   });
 
@@ -29,10 +36,7 @@ void main() {
     binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
   });
 
-  test('init method test', () async {
-    final sdk = FeedbackFlutterSdk();
-    try {
-      await sdk.init(
+  Future<bool> init(FeedbackFlutterSdk sdk) => sdk.init(
         "applicationId",
         "accessKey",
         "apiUrl",
@@ -40,45 +44,153 @@ void main() {
         null,
         code: "test-code",
       );
-      expect(true, isTrue);
-    } catch (e) {
-      expect(true, isTrue);
+
+  test('init completes with the boot result', () async {
+    final sdk = FeedbackFlutterSdk();
+    expect(await init(sdk), isTrue);
+    initResult = false;
+    expect(await init(sdk), isFalse);
+  });
+
+  test('show maps the result by name', () async {
+    final sdk = FeedbackFlutterSdk();
+    for (final value in FeedbackCallback.values) {
+      showResult = value.name;
+      expect(await sdk.show(), value);
     }
   });
 
-  test('show method test', () async {
+  test('show maps an unknown or legacy result to none', () async {
     final sdk = FeedbackFlutterSdk();
-    try {
-      await sdk.init(
-        "applicationId",
-        "accessKey",
-        "apiUrl",
-        "feedbackUrl",
-        null,
-        code: "test-code",
-      );
-      final result = await sdk.show();
-      expect(result, FeedbackCallback.closed);
-    } catch (e) {
-      expect(true, isTrue);
+    for (final value in ['outside', 'opened', 1, null]) {
+      showResult = value;
+      expect(await sdk.show(), FeedbackCallback.none);
     }
   });
 
-  test('track method test', () async {
+  test('show forwards its arguments', () async {
     final sdk = FeedbackFlutterSdk();
-    try {
-      await sdk.init(
-        "applicationId",
-        "accessKey",
-        "apiUrl",
-        "feedbackUrl",
-        null,
-        code: "test-code",
+    await sdk.show(
+      viewMode: ViewMode.bottomSheetMode,
+      title: 'Title',
+      titleFontSize: 18,
+      code: 'PSN-x',
+      language: 'tr',
+      payload: {'screen': 'home'},
+      dismissOnDrag: true,
+    );
+    expect(calls.single.arguments, {
+      'viewMode': 1,
+      'title': 'Title',
+      'titleFontSize': 18,
+      'code': 'PSN-x',
+      'language': 'tr',
+      'customer': null,
+      'payload': {'screen': 'home'},
+      'dismissOnDrag': true,
+    });
+  });
+
+  test('customer: a PisanoCustomer is sent with the canonical keys', () async {
+    final sdk = FeedbackFlutterSdk();
+    await sdk.show(
+      customer: const PisanoCustomer(
+        name: 'Ada',
+        externalId: 'USR-1',
+        customAttributes: {'plan': 'gold'},
+      ),
+    );
+    expect(calls.single.arguments['customer'], {
+      'name': 'Ada',
+      'externalId': 'USR-1',
+      'customAttributes': {'plan': 'gold'},
+    });
+  });
+
+  test('customer: other spellings are mapped, canonical wins, unknown keys dropped', () {
+    expect(
+      normalizeCustomer({
+        'Phone': '1',
+        'External-Id': 'X',
+        'externalId': 'canonical',
+        'custom_attrs': {'plan': 'gold'},
+        'emial': 'typo@b.co',
+      }),
+      {
+        'phoneNumber': '1',
+        'externalId': 'canonical',
+        'customAttributes': {'plan': 'gold'},
+      },
+    );
+    expect(normalizeCustomer(null), isNull);
+  });
+
+  test('healthCheck completes with a bool', () async {
+    final sdk = FeedbackFlutterSdk();
+    expect(
+      await sdk.healthCheck(customer: {'external_id': 'USR-1'}),
+      isTrue,
+    );
+    expect(calls.single.arguments['customer'], {'externalId': 'USR-1'});
+  });
+
+  test('track is fire-and-forget', () async {
+    final sdk = FeedbackFlutterSdk();
+    await sdk.track('test_event', payload: {'a': 'b'});
+    expect(calls.single.method, 'track');
+    expect(calls.single.arguments['event'], 'test_event');
+    expect(() => sdk.track(''), throwsException);
+  });
+
+  test('setAutomaticStoreReview forwards the flag', () async {
+    final sdk = FeedbackFlutterSdk();
+    await sdk.setAutomaticStoreReview(false);
+    expect(calls.single.method, 'setAutomaticStoreReview');
+    expect(calls.single.arguments, {'enabled': false});
+  });
+
+  test('PisanoEvent.fromMap reads the native event map', () {
+    final closed = PisanoEvent.fromMap({
+      'type': 'closed',
+      'code': 'PSN-x',
+      'hasChat': false,
+      'closeReason': 'outside',
+      'handledBySDK': false,
+    })!;
+    expect(closed.type, PisanoEventType.closed);
+    expect(closed.code, 'PSN-x');
+    expect(closed.closeReason, PisanoCloseReason.outside);
+
+    final submitted = PisanoEvent.fromMap({
+      'type': 'feedbackSubmitted',
+      'code': 'PSN-x',
+      'hasChat': true,
+      'closeReason': null,
+      'handledBySDK': false,
+    })!;
+    expect(submitted.hasChat, isTrue);
+    expect(submitted.closeReason, isNull);
+
+    expect(PisanoEvent.fromMap({'type': 'unknown'}), isNull);
+  });
+
+  test('events stream delivers native events', () async {
+    const codec = StandardMethodCodec();
+    final received = <PisanoEvent>[];
+    final subscription = FeedbackFlutterSdk().events.listen(received.add);
+    await Future<void>.delayed(Duration.zero);
+
+    for (final type in PisanoEventType.values) {
+      await binding.defaultBinaryMessenger.handlePlatformMessage(
+        'feedback_flutter_sdk/events',
+        codec.encodeSuccessEnvelope({'type': type.name, 'code': 'PSN-x'}),
+        (_) {},
       );
-      final result = await sdk.track('test_event');
-      expect(result, FeedbackCallback.closed);
-    } catch (e) {
-      expect(true, isTrue);
     }
+    await Future<void>.delayed(Duration.zero);
+
+    expect(received.map((e) => e.type), PisanoEventType.values);
+    await subscription.cancel();
+    developer.log('events: $received');
   });
 }

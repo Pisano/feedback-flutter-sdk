@@ -6,14 +6,14 @@ import PackageDescription
 let package = Package(
     name: "feedback_flutter_sdk",
     platforms: [
-        .iOS("12.0")
+        .iOS("15.0")
     ],
     products: [
         .library(name: "feedback-flutter-sdk", targets: ["feedback_flutter_sdk"])
     ],
     dependencies: [
-        // Mirrors the `s.dependency 'Pisano', '~> 1.0.21'` constraint of the podspec.
-        .package(url: "https://github.com/Pisano/pisano-ios.git", .upToNextMinor(from: "1.0.21"))
+        // Mirrors the `s.dependency 'Pisano', '~> 2.0.0'` constraint of the podspec.
+        .package(url: "https://github.com/Pisano/pisano-ios.git", .upToNextMinor(from: "2.0.0"))
     ],
     targets: [
         .target(
