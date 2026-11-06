@@ -1,9 +1,9 @@
 PODS:
-  - feedback_flutter_sdk (0.0.16):
+  - feedback_flutter_sdk (1.0.0):
     - Flutter
-    - Pisano (~> 1.0.17)
+    - Pisano (~> 2.0.0)
   - Flutter (1.0.0)
-  - Pisano (1.0.17)
+  - Pisano (2.0.0)
 
 DEPENDENCIES:
   - feedback_flutter_sdk (from `.symlinks/plugins/feedback_flutter_sdk/ios`)
@@ -20,10 +20,10 @@ EXTERNAL SOURCES:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  feedback_flutter_sdk: 47a04874475ee65fb3d0ed8e5bd7a4999156f116
-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  Pisano: d8867f662b14349ed5d79b85054c19a6aeb9c723
+  feedback_flutter_sdk: 1bd60a176c43e754350e6e20182053fbfc6afa70
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
+  Pisano: 3fa7fb64cedd650ab8933322f3169239a330de20
 
-PODFILE CHECKSUM: 0dbd5a87e0ace00c9610d2037ac22083a01f861d
+PODFILE CHECKSUM: 57c8aed26fba39d3ec9424816221f294a07c58eb
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0

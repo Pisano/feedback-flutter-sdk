@@ -40,7 +40,7 @@ dependencies:
   feedback_flutter_sdk:
     git:
       url: https://github.com/Pisano/feedback-flutter-sdk.git
-      ref: <tag_or_commit>
+      ref: 1.0.0
 ```
 
 ### Option B) Local path (during development)
