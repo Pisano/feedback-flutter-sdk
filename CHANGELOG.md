@@ -1,4 +1,50 @@
-## Unreleased
+## 1.0.0 (unreleased)
+
+Moves the plugin onto the native Pisano 2.0 SDKs (iOS `Pisano ~> 2.0.0`,
+Android `co.pisano:feedback:2.0.0`). Both report one result per `show()` and
+the survey events through a separate channel; the plugin does the same.
+
+* **BREAKING**: minimum iOS **15.0** (podspec, `Package.swift`, example app);
+  Dart `>= 2.17`, Flutter `>= 3.0`.
+* **BREAKING**: `FeedbackCallback` holds only `show()` results:
+  `none`, `closed`, `sendFeedback`, `displayOnce`, `preventMultipleFeedback`,
+  `channelQuotaExceeded`, and the new `channelPassive` and
+  `displayRateLimited`. `outside` is removed (an outside tap is `closed`; the
+  `closed` event's `closeReason` is `outside`), and so is `opened` (an event).
+* **BREAKING**: the native plugins send the result **by name**. Android used to
+  send `ordinal + 1`, so every Android result was off by one (a closed survey
+  arrived as `sendFeedback`); this is fixed.
+* **BREAKING**: Android `minSdk` 21 and `compileSdk` 34, as the native
+  `co.pisano:feedback` 2.0 AAR requires. The unused `READ_EXTERNAL_STORAGE` /
+  `WRITE_EXTERNAL_STORAGE` permissions are no longer added to your app.
+* **BREAKING**: `init()` completes with a `bool` (`true` when the SDK booted).
+* **BREAKING**: `track()` returns `Future<bool>`: `true` when the server
+  accepted the event. It used to wait on the next survey result and could
+  steal a pending `show()` result on Android.
+* **BREAKING**: `payload` is typed `Map<String, String>?`; `customer` is a
+  `PisanoCustomer` or a `Map`. The Android plugin read `customAttrs` while the
+  README documented it, so custom attributes were dropped on Android; both
+  plugins now read `customAttributes`, and Dart maps `customAttrs`,
+  `custom_attrs`, `phone_number`, `external_id`, `phone` (any case) onto the
+  `PisanoCustomer` fields. Unknown keys are dropped with a warning.
+* Results follow one rule on both platforms: a submitted survey completes
+  `sendFeedback` however the widget closes afterwards; a survey that is not
+  shown, or whose page cannot load, completes `none` (on iOS a `show()` without
+  a successful boot used to never complete). One survey at a time: a `show()`
+  while one is open or about to open completes `none`; `clear()` completes a
+  pending one with `none`. Both rules are in the native SDKs; the plugins keep
+  no `show()` state and complete each call from its own native result.
+* Add `events` (`Stream<PisanoEvent>`): `opened`, `feedbackSubmitted`
+  (`hasChat`), `redirectedToStore` (`handledBySDK`), `closed` (`closeReason`).
+* Add `setRequestTimeout(Duration)`: network timeout of every SDK request
+  (default 30 seconds on both platforms).
+* Add `show(dismissOnDrag:)`, `healthCheck()`, `setAutomaticStoreReview()` and
+  the `PisanoCustomer` class.
+* Android: `init(debugLogging:)` now turns on the native debug log too.
+* Example app: event log, health check, `dismissOnDrag` and automatic store
+  review switches, typed `PisanoCustomer`.
+
+## Unreleased (Swift Package Manager)
 
 * Add Swift Package Manager (SPM) support for iOS, alongside the existing CocoaPods support.
   * Add `ios/feedback_flutter_sdk/Package.swift`, depending on the [`Pisano/pisano-ios`](https://github.com/Pisano/pisano-ios) Swift package (`PisanoFeedback`), mirroring the podspec's `~> 1.0.21` constraint.

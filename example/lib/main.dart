@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:feedback_flutter_sdk/feedback_flutter_sdk.dart';
@@ -41,7 +42,7 @@ class _MyAppState extends State<MyApp> {
         return;
       }
 
-      await feedbackSdk.init(
+      final booted = await feedbackSdk.init(
         PisanoConfig.applicationId,
         PisanoConfig.accessKey,
         PisanoConfig.apiUrl,
@@ -51,10 +52,13 @@ class _MyAppState extends State<MyApp> {
         code: PisanoConfig.code,
       );
       setState(() {
-        _initialized = true;
-        _initError = null;
+        _initialized = booted;
+        _initError = booted
+            ? null
+            : 'Boot failed: check the credentials and URLs '
+                '(turn on debugLogging for details).';
       });
-      log('Pisano init completed');
+      log('Pisano init completed: $booted');
     } catch (e) {
       setState(() {
         _initialized = false;
@@ -287,10 +291,34 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
   _TitleFont _titleFont = _TitleFont.title;
   _TitleColor _titleColor = _TitleColor.blue;
 
+  bool _dismissOnDrag = false;
+  bool _automaticStoreReview = true;
+  // Network timeout of every SDK request; 30 s is the default on both platforms.
+  int _requestTimeoutSeconds = 30;
+  bool? _lastTrackSent;
+  FeedbackCallback? _secondShowStatus;
+
   FeedbackCallback? _lastShowStatus;
+  bool? _lastHealthCheck;
+  final List<String> _events = [];
+  StreamSubscription<PisanoEvent>? _eventSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    // Every survey event, as it arrives (before the show() result).
+    _eventSubscription = widget.feedbackSdk.events.listen((event) {
+      log('event: $event');
+      setState(() {
+        _events.insert(0, _describeEvent(event));
+        if (_events.length > 20) _events.removeLast();
+      });
+    });
+  }
 
   @override
   void dispose() {
+    _eventSubscription?.cancel();
     _phoneController.dispose();
     _externalIdController.dispose();
     _customTitleController.dispose();
@@ -315,12 +343,10 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
       return;
     }
 
-    final customer = <String, dynamic>{
-      if (_phoneController.text.trim().isNotEmpty)
-        'phoneNumber': _phoneController.text.trim(),
-      if (_externalIdController.text.trim().isNotEmpty)
-        'externalId': _externalIdController.text.trim(),
-    };
+    final customer = PisanoCustomer(
+      phoneNumber: _textOrNull(_phoneController),
+      externalId: _textOrNull(_externalIdController),
+    );
 
     final payload = <String, String>{
       'source': 'flutter_example',
@@ -332,8 +358,9 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
       title: title.isEmpty ? null : title,
       titleFontSize: _titleFontSize,
       language: PisanoConfig.language,
-      customer: customer.isEmpty ? {} : customer,
+      customer: customer,
       payload: payload,
+      dismissOnDrag: _dismissOnDrag,
     );
 
     setState(() {
@@ -345,16 +372,54 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
   Future<void> _onTrackPressed() async {
     if (!widget.initialized) return;
 
-    final callback = await widget.feedbackSdk.track(
+    final sent = await widget.feedbackSdk.track(
       'view_promo',
-      customer: {
-        if (_externalIdController.text.trim().isNotEmpty)
-          'externalId': _externalIdController.text.trim(),
-      },
+      customer: PisanoCustomer(externalId: _textOrNull(_externalIdController)),
       payload: const {'source': 'flutter_example'},
       language: PisanoConfig.language,
     );
-    log('track callback: $callback');
+    setState(() => _lastTrackSent = sent);
+    log('track sent: $sent');
+  }
+
+  Future<void> _onHealthCheckPressed() async {
+    if (!widget.initialized) return;
+
+    final canShow = await widget.feedbackSdk.healthCheck(
+      customer: PisanoCustomer(externalId: _textOrNull(_externalIdController)),
+      language: PisanoConfig.language,
+    );
+    setState(() => _lastHealthCheck = canShow);
+    log('healthCheck: $canShow');
+  }
+
+  Future<void> _onRequestTimeoutChanged(int? seconds) async {
+    if (seconds == null) return;
+    await widget.feedbackSdk.setRequestTimeout(Duration(seconds: seconds));
+    setState(() => _requestTimeoutSeconds = seconds);
+    log('requestTimeout = $seconds s');
+  }
+
+  // One survey at a time: the call whose request comes back first opens the
+  // survey and the other completes with `none`. That is not always the second
+  // call, so the status line shows both results ("Show" and "2nd show").
+  Future<void> _onShowTwicePressed() async {
+    if (!widget.initialized) return;
+    setState(() => _secondShowStatus = null);
+    final first = _onGetFeedbackPressed();
+    final second = await widget.feedbackSdk.show(
+      viewMode: _viewMode,
+      language: PisanoConfig.language,
+      dismissOnDrag: _dismissOnDrag,
+    );
+    setState(() => _secondShowStatus = second);
+    log('show twice, 2nd: $second');
+    await first;
+  }
+
+  Future<void> _onAutomaticStoreReviewChanged(bool enabled) async {
+    await widget.feedbackSdk.setAutomaticStoreReview(enabled);
+    setState(() => _automaticStoreReview = enabled);
   }
 
   Future<void> _onClearPressed() async {
@@ -440,6 +505,29 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                       onSelectionChanged: (s) =>
                           setState(() => _viewMode = s.first),
                     ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Dismiss on drag (bottom sheet)'),
+                      value: _dismissOnDrag,
+                      onChanged: (v) => setState(() => _dismissOnDrag = v),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Automatic store review'),
+                      value: _automaticStoreReview,
+                      onChanged: _onAutomaticStoreReviewChanged,
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Request timeout'),
+                      trailing: DropdownButton<int>(
+                        value: _requestTimeoutSeconds,
+                        items: const [30, 5, 60]
+                            .map((s) => DropdownMenuItem(value: s, child: Text('$s s')))
+                            .toList(),
+                        onChanged: _onRequestTimeoutChanged,
+                      ),
+                    ),
                     const SizedBox(height: 18),
                     Text('Custom Title Color', style: headerStyle),
                     const SizedBox(height: 8),
@@ -516,19 +604,52 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: OutlinedButton(
+                            onPressed: _onHealthCheckPressed,
+                            child: const Text('Health check'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton(
                             onPressed: _onClearPressed,
                             child: const Text('Clear'),
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: _onShowTwicePressed,
+                      child: const Text('Show twice (one → none)'),
+                    ),
                     const SizedBox(height: 14),
                     Text(
-                      'Status: Show: ${_lastShowStatus == null ? '-' : _enumName(_lastShowStatus)}',
+                      'Status: Show: ${_lastShowStatus == null ? '-' : _enumName(_lastShowStatus)}'
+                      ' · 2nd show: ${_secondShowStatus == null ? '-' : _enumName(_secondShowStatus)}'
+                      ' · Health check: ${_lastHealthCheck ?? '-'}'
+                      ' · Track sent: ${_lastTrackSent ?? '-'}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: const Color(0xFF6B7280),
                           ),
                     ),
+                    const SizedBox(height: 14),
+                    Text('Events', style: headerStyle),
+                    const SizedBox(height: 6),
+                    if (_events.isEmpty)
+                      Text(
+                        'Survey events appear here.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      )
+                    else
+                      ..._events.map(
+                        (line) => Text(
+                          line,
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -570,4 +691,22 @@ String _enumName(Object? e) {
   final s = e.toString();
   final dot = s.lastIndexOf('.');
   return dot == -1 ? s : s.substring(dot + 1);
+}
+
+String? _textOrNull(TextEditingController controller) {
+  final text = controller.text.trim();
+  return text.isEmpty ? null : text;
+}
+
+String _describeEvent(PisanoEvent event) {
+  switch (event.type) {
+    case PisanoEventType.feedbackSubmitted:
+      return 'feedbackSubmitted hasChat=${event.hasChat}';
+    case PisanoEventType.redirectedToStore:
+      return 'redirectedToStore handledBySDK=${event.handledBySDK}';
+    case PisanoEventType.closed:
+      return 'closed reason=${event.closeReason?.name}';
+    case PisanoEventType.opened:
+      return 'opened';
+  }
 }

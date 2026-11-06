@@ -7,7 +7,8 @@ If you’re looking for the native iOS sample apps, see the Pisano iOS sample re
 ## ✨ Features
 
 - **Widget UI**: Feedback widget is rendered via web content through the native SDKs
-- **One Flutter API**: Same Dart calls for Android + iOS (`init`, `show`, `track`, `clear`)
+- **One Flutter API**: Same Dart calls for Android + iOS (`init`, `show`, `healthCheck`, `track`, `clear`)
+- **Survey events**: `events` stream with opened / submitted / store redirect / closed (with the reason)
 - **View modes**: Full screen and bottom sheet
 - **Customer + payload**: Pass customer attributes and transactional payload
 - **Multi-language**: Provide `language`
@@ -15,9 +16,15 @@ If you’re looking for the native iOS sample apps, see the Pisano iOS sample re
 
 ## 📱 Requirements
 
-- **Flutter**: tested with Flutter `3.38.3` (Dart `3.10.1`)
-- **iOS development**: Xcode 15+ and CocoaPods `>= 1.13`
-- **Android development**: Android SDK 34+ and Java 17
+| Requirement | Minimum | Notes |
+|---|---|---|
+| Flutter | **3.0+** | Tested with Flutter `3.38.3` / Dart `3.10.1`. The Swift Package Manager path needs a Flutter version with SPM support turned on. |
+| Dart | **2.17+** | — |
+| iOS | **iOS 15.0+ · Xcode 16+** | Native Pisano SDK 2.0. Swift Package Manager **or** CocoaPods `>= 1.13`. |
+| Android | **`minSdk` 21 · `compileSdk` 34+ · JDK 17** | The native `co.pisano:feedback` 2.0 AAR requires `minSdk` 21 and `compileSdk` 34 (the build fails below). |
+| Platforms | `android`, `ios` | No web or desktop. |
+
+Minimum versions are raised only in a major or `0.x` minor release, with a migration note.
 
 Native SDK versions are an internal implementation detail for most consumers.
 If you are contributing to the plugin or debugging native builds, see `DEVELOPMENT.md`.
@@ -65,7 +72,7 @@ Call once at app startup (or before the first `show()`):
 ```dart
 final feedbackSdk = FeedbackFlutterSdk();
 
-await feedbackSdk.init(
+final booted = await feedbackSdk.init(
   '<applicationId>',
   '<accessKey>',
   '<apiUrl>',
@@ -74,44 +81,68 @@ await feedbackSdk.init(
   debugLogging: false,
   code: '<surveyOrChannelCode>', // required; from Pisano panel
 );
+if (!booted) {
+  // Boot failed — show() will complete with FeedbackCallback.none.
+}
 ```
 
 ### 3) Show widget
 
 ```dart
-final callback = await feedbackSdk.show(
+final result = await feedbackSdk.show(
   viewMode: ViewMode.bottomSheetMode,
   title: 'We Value Your Feedback',
   titleFontSize: 20,
   code: null, // optional; if omitted, boot code is used
   language: 'tr',
-  customer: {
-    'name': 'John Doe',
-    'externalId': 'CRM-12345',
-    'email': 'john@example.com',
-    'phoneNumber': '+905001112233',
-    'customAttrs': {'plan': 'premium'},
-  },
+  dismissOnDrag: true, // bottom sheet: let the user drag it away
+  customer: const PisanoCustomer(
+    name: 'John Doe',
+    externalId: 'CRM-12345',
+    email: 'john@example.com',
+    phoneNumber: '+905001112233',
+    customAttributes: {'plan': 'premium'},
+  ),
   payload: {'source': 'app', 'screen': 'home'},
 );
 
-print('show callback: $callback');
+if (result == FeedbackCallback.sendFeedback) {
+  // The survey was submitted.
+}
 ```
 
-### 4) Track event
+### 4) Listen to survey events (optional)
 
 ```dart
-final callback = await feedbackSdk.track(
-  'view_promo',
-  language: 'tr',
-  customer: {'externalId': 'CRM-12345'},
-  payload: {'campaign': 'winter'},
-);
+final subscription = feedbackSdk.events.listen((event) {
+  switch (event.type) {
+    case PisanoEventType.feedbackSubmitted:
+      print('submitted, chat: ${event.hasChat}');
+      break;
+    case PisanoEventType.closed:
+      print('closed: ${event.closeReason}');
+      break;
+    default:
+      break;
+  }
+});
 
-print('track callback: $callback');
+// Later:
+await subscription.cancel();
 ```
 
-### 5) Clear
+### 5) Track event
+
+```dart
+final sent = await feedbackSdk.track(
+  'view_promo',
+  language: 'tr',
+  customer: const PisanoCustomer(externalId: 'CRM-12345'),
+  payload: {'campaign': 'winter'},
+);
+```
+
+### 6) Clear
 
 ```dart
 await feedbackSdk.clear();
@@ -121,23 +152,65 @@ await feedbackSdk.clear();
 
 ### `FeedbackFlutterSdk`
 
-- **`Future<void> init(applicationId, accessKey, apiUrl, feedbackUrl, eventUrl, {debugLogging, required code})`**
+- **`Future<bool> init(applicationId, accessKey, apiUrl, feedbackUrl, eventUrl, {debugLogging, required code})`**
   - Must be called before `show` / `track`. `code` is the survey/channel code from the Pisano panel.
-- **`Future<FeedbackCallback> show({viewMode, title, titleFontSize, code, language, customer, payload})`**
+  - Completes with `true` once the SDK is set up, `false` when it failed (wrong credentials or URL, network error).
+- **`Future<FeedbackCallback> show({viewMode, title, titleFontSize, code, language, customer, payload, dismissOnDrag})`**
+  - Completes **once** with the result (see [`FeedbackCallback`](#feedbackcallback)).
   - `code` is optional; if omitted, the boot code is used.
-- **`Future<FeedbackCallback> track(event, {language, customer, payload})`**
+  - `dismissOnDrag` (bottom sheet only, default `false`) lets the user drag the sheet away.
+- **`Future<bool> healthCheck({code, language, customer, payload})`**
+  - Whether `show()` would open a survey right now, without showing anything.
+- **`Future<bool> track(event, {language, customer, payload})`**
+  - Sends a custom event to the trigger engine; completes with `true` when the server accepted it (`false`: not initialized, no `eventUrl`, no connection, or the request failed). A survey it triggers opens on its own and reports through `events`.
+- **`Stream<PisanoEvent> events`** — see [Survey events](#pisanoevent--survey-events).
+- **`Future<void> setAutomaticStoreReview(bool enabled)`**
+  - Whether the SDK asks the system for the store review prompt when a survey redirects to the store. Defaults to `true` (again on every app start). Turn it off to run your own flow on the `redirectedToStore` event (`handledBySDK` is `false`). The `show()` result does not change.
+- **`Future<void> setRequestTimeout(Duration timeout)`**
+  - Network timeout of every SDK request, in whole seconds: a request fails when the server sends no data for this long. Defaults to 30 seconds on both platforms; applies to requests that start after it is set. Less than 1 second is ignored.
 - **`Future<void> clear()`**
+  - Ends the session; a `show()` still pending completes with `FeedbackCallback.none`. The native SDKs also forget the boot settings: call `init()` again for the next user (until then `show()` completes `none`, `track()` / `healthCheck()` `false`).
 
 ### `ViewMode`
 
 - **`ViewMode.defaultMode`**: full screen
-- **`ViewMode.bottomSheetMode`**: bottom sheet (note: some iOS bottom sheet behaviors require iOS 13+)
+- **`ViewMode.bottomSheetMode`**: bottom sheet
 
 ### `FeedbackCallback`
 
-Returned from `show()` and `track()`:
+The result of `show()`, reported once:
 
-- `closed`, `sendFeedback`, `outside`, `opened`, `displayOnce`, `preventMultipleFeedback`, `channelQuotaExceeded`, `none`
+| Value | When |
+|---|---|
+| `sendFeedback` | The survey was submitted — also in chat surveys, and also when the thank-you screen is closed early |
+| `closed` | Closed without submitting: close button, back (Android), drag, a tap outside the bottom sheet, or the app/system took it away. The `closed` event's `closeReason` tells which |
+| `none` | No result: not initialized, no connection, a failed request, the survey page could not load, `clear()` was called, or a second `show()` while one is open |
+| `displayOnce` | Not shown: the customer saw it before |
+| `preventMultipleFeedback` | Not shown: the customer already gave feedback in the given period |
+| `channelQuotaExceeded` | Not shown: the channel quota is full |
+| `channelPassive` | Not shown: the channel is passive |
+| `displayRateLimited` | Not shown: display rate limit |
+
+A store review request is not a result: it is the `redirectedToStore` event.
+
+### `PisanoEvent` — survey events
+
+`feedbackSdk.events` is a broadcast stream of the events of every survey shown by `show()`:
+
+| `type` | When | Extra field |
+|---|---|---|
+| `opened` | the survey widget is on screen | — |
+| `feedbackSubmitted` | the user submitted the survey (also in chat surveys) | `hasChat` |
+| `redirectedToStore` | the survey asked for the store review flow | `handledBySDK`: the SDK asked the system for the review prompt (the system does not say whether it was shown) |
+| `closed` | the widget left the screen, right before the `show()` result | `closeReason` |
+
+`PisanoCloseReason`: `closeButton`, `back` (Android), `drag`, `outside`, `afterSubmit` (the thank-you screen ended), `clear`, `loadFailed`, `hostDismissed` (the app or the system took the widget away).
+
+For one survey the events arrive in this order, all before the `show()` result: `opened` → `feedbackSubmitted` → `redirectedToStore` → `closed`. A survey that is not shown sends no events. A widget that closes before it finished appearing (a page that cannot load) may send `closed` without `opened`. Every event carries the survey `code`.
+
+### `PisanoCustomer`
+
+`name`, `email`, `phoneNumber`, `externalId`, `customAttributes` — the same fields as the native SDKs. `customer` also accepts a `Map`: other spellings (`phone_number`, `external_id`, `custom_attrs`, `phone`, any case) are mapped onto these fields, the canonical spelling wins when two keys name the same field, and an unknown key is **not sent** and logs a warning.
 
 ## ▶️ Run the Example App
 
