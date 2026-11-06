@@ -1,4 +1,4 @@
-## 1.0.0 (unreleased)
+## 1.0.0
 
 Moves the plugin onto the native Pisano 2.0 SDKs (iOS `Pisano ~> 2.0.0`,
 Android `co.pisano:feedback:2.0.0`). Both report one result per `show()` and
@@ -34,6 +34,13 @@ the survey events through a separate channel; the plugin does the same.
   while one is open or about to open completes `none`; `clear()` completes a
   pending one with `none`. Both rules are in the native SDKs; the plugins keep
   no `show()` state and complete each call from its own native result.
+* Add Swift Package Manager (SPM) support for iOS, alongside CocoaPods:
+  `ios/feedback_flutter_sdk/Package.swift` depends on the
+  [`Pisano/pisano-ios`](https://github.com/Pisano/pisano-ios) package
+  (`PisanoFeedback`, from `2.0.0`). The iOS sources moved to
+  `ios/feedback_flutter_sdk/Sources/feedback_flutter_sdk/` and the plugin class
+  is now `FeedbackFlutterSdkPlugin` (a deprecated `SwiftFeedbackFlutterSdkPlugin`
+  typealias is kept).
 * Add `events` (`Stream<PisanoEvent>`): `opened`, `feedbackSubmitted`
   (`hasChat`), `redirectedToStore` (`handledBySDK`), `closed` (`closeReason`).
 * Add `setRequestTimeout(Duration)`: network timeout of every SDK request
@@ -43,15 +50,6 @@ the survey events through a separate channel; the plugin does the same.
 * Android: `init(debugLogging:)` now turns on the native debug log too.
 * Example app: event log, health check, `dismissOnDrag` and automatic store
   review switches, typed `PisanoCustomer`.
-
-## Unreleased (Swift Package Manager)
-
-* Add Swift Package Manager (SPM) support for iOS, alongside the existing CocoaPods support.
-  * Add `ios/feedback_flutter_sdk/Package.swift`, depending on the [`Pisano/pisano-ios`](https://github.com/Pisano/pisano-ios) Swift package (`PisanoFeedback`), mirroring the podspec's `~> 1.0.21` constraint.
-  * Move iOS sources to `ios/feedback_flutter_sdk/Sources/feedback_flutter_sdk/`; the podspec's `source_files` points at the new location, so CocoaPods keeps working unchanged.
-  * Replace the Objective-C registrar shim with the Swift plugin class, renamed from `SwiftFeedbackFlutterSdkPlugin` to `FeedbackFlutterSdkPlugin` and annotated with `@objc(FeedbackFlutterSdkPlugin)`. `pluginClass` in `pubspec.yaml` is unchanged, and a deprecated `SwiftFeedbackFlutterSdkPlugin` typealias is kept for source compatibility.
-  * Raise the podspec's iOS platform from `9.0` to `12.0`, matching the native SDK's stated requirement.
-* No Dart API changes.
 
 ## 0.0.18
 
