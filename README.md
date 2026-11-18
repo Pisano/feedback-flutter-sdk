@@ -21,7 +21,7 @@ If you’re looking for the native iOS sample apps, see the Pisano iOS sample re
 | Flutter | **3.0+** | Tested with Flutter `3.38.3` / Dart `3.10.1`. The Swift Package Manager path needs a Flutter version with SPM support turned on. |
 | Dart | **2.17+** | — |
 | iOS | **iOS 15.0+ · Xcode 16+** | Native Pisano SDK 2.0. Swift Package Manager **or** CocoaPods `>= 1.13`. |
-| Android | **`minSdk` 21 · `compileSdk` 34+ · JDK 17** | The native `co.pisano:feedback` 2.0 AAR requires `minSdk` 21 and `compileSdk` 34 (the build fails below). |
+| Android | **`minSdk` 21 · JDK 17** | The native `co.pisano:feedback` 2.0 AAR requires `minSdk` 21 (the build fails below). It sets no `compileSdk` minimum for your app: use what your Flutter version and Google Play's target API rule ask for. |
 | Platforms | `android`, `ios` | No web or desktop. |
 
 Minimum versions are raised only in a major or `0.x` minor release, with a migration note.

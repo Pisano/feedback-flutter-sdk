@@ -14,8 +14,9 @@ the survey events through a separate channel; the plugin does the same.
 * **BREAKING**: the native plugins send the result **by name**. Android used to
   send `ordinal + 1`, so every Android result was off by one (a closed survey
   arrived as `sendFeedback`); this is fixed.
-* **BREAKING**: Android `minSdk` 21 and `compileSdk` 34, as the native
-  `co.pisano:feedback` 2.0 AAR requires. The unused `READ_EXTERNAL_STORAGE` /
+* **BREAKING**: Android `minSdk` 21, as the native `co.pisano:feedback` 2.0
+  AAR requires. (The plugin itself now compiles against API 34; your app's
+  `compileSdk` has no Pisano minimum.) The unused `READ_EXTERNAL_STORAGE` /
   `WRITE_EXTERNAL_STORAGE` permissions are no longer added to your app.
 * **BREAKING**: `init()` completes with a `bool` (`true` when the SDK booted).
 * **BREAKING**: `track()` returns `Future<bool>`: `true` when the server
